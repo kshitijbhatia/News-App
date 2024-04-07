@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
-import 'package:news_app/network/Space_News_Service/api_service.dart';
+import 'package:news_app/network/api_service.dart';
 
 class ArticleController{
 
@@ -11,11 +11,14 @@ class ArticleController{
 
   final ApiService _api = ApiService.getInstance;
 
-  Future<List<Article>> getArticles(int pageSize, int currentPage) async{
+  Future<List<Article>> getArticles() async{
     try{
-      final response = await _api.getArticles(pageSize, currentPage);
-      final List<Map<String, dynamic>> resListJson = List<Map<String, dynamic>>.from(response["results"]);
-      List<Article> articles = resListJson.map((json) => Article.fromJson(json)).toList();
+      final response = await _api.getArticles();
+      final List<Map<String, dynamic>> resListJson = List<Map<String, dynamic>>.from(response["articles"]);
+      List<Article> articles = resListJson.map((json) {
+        log('$json');
+        return Article.fromJson(json);
+      }).toList();
       return articles;
     } on CustomError catch(error){
       log('Controller : ${error.toString()}');

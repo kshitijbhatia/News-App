@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:news_app/models/custom_error.dart';
-import 'package:news_app/network/Space_News_Service/api_interceptors.dart';
+import 'package:news_app/network/api_interceptors.dart';
 import 'package:news_app/utils/constants.dart';
 
 class ApiService{
@@ -22,26 +22,23 @@ class ApiService{
   );
 
   // Get All Articles
-  Future<Map<String, dynamic>> getArticles(int pageSize, int currentPage) async {
+  Future<Map<String, dynamic>> getArticles() async {
     try{
       _dio.interceptors.add(GetInterceptor());
 
       String method = 'GET';
-      int offset = 4*currentPage;
 
       Map<String, dynamic> queryParams = {
-        'has_event' : true,
-        'has_launch' : true,
-        'is_featured' : true,
-        'limit' : pageSize,
-        'offset' : offset
+        'apiKey' : Constants.apiKey,
+        'country' : Constants.country,
+        'category' : Constants.newsCategory
       };
 
       final Response<Map<String, dynamic>> response = await _dio.request(
-
           Constants.getArticlesEndpoint,
           options: Options(method: method),
-          queryParameters: queryParams);
+          queryParameters: queryParams
+      );
 
       final Map<String, dynamic> resJson = response.data!;
       return resJson;

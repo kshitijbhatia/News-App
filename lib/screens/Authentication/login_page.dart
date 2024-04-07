@@ -1,9 +1,10 @@
-import 'dart:developer';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:news_app/network/authentication_service.dart';
 import 'package:news_app/screens/Authentication/register_page.dart';
 import 'package:news_app/utils/constants.dart';
+import 'package:news_app/widgets/snackbar.dart';
 import 'package:news_app/widgets/submit_button.dart';
 import 'package:news_app/widgets/text_input.dart';
 
@@ -41,6 +42,26 @@ class _LoginPageState extends State<LoginPage> {
         builder: (context) => const RegisterPage(),
       ),
     );
+  }
+
+  _loginUser() async {
+    String email = _emailController.text;
+    String pass = _passController.text;
+    try{
+      await Authentication.getInstance.signIn(email, pass);
+    } on FirebaseAuthException catch(err){
+      if(err.code == "invalid-email"){
+        setState(() => _emailError = "Please enter a valid email");
+      }else if(err.code == "user-not-found"){
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Wrong Email Or Password"));
+      }else if(err.code == "wrong-password"){
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Wrong Password"));
+      }else{
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Unkown Error. Please try again later"));
+      }
+    }catch(err){
+      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error Occurred. Please try again"));
+    }
   }
 
   @override
@@ -133,9 +154,8 @@ class _LoginPageState extends State<LoginPage> {
           SubmitButton(
             text: 'Login',
             formKey: _formKey,
-            onClick: (){
-              log(_emailController.text);
-              log(_passController.text);
+            onClick: () async {
+              _loginUser();
             },
           ),
           20.h,

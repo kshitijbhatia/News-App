@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
-import 'package:news_app/screens/error_page.dart';
+import 'package:news_app/screens/Error_Page/error_page.dart';
 import 'package:news_app/utils/constants.dart';
-import 'package:news_app/widgets/article_card.dart';
-import 'package:news_app/screens/loading_page.dart';
+import 'package:news_app/screens/Home_Page/article_card.dart';
+import 'package:news_app/screens/Loading_Page/loading_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,9 +23,6 @@ class _HomePageState extends State<HomePage> {
   Stream<List<Article>> get dataStream => _dataStreamController.stream;
 
   final List<Article> _articles = [];
-
-  int _currentPage = 0;
-  final int _pageSize = 4;
 
   bool _isFetchingData = false;
   bool _stopFetchingData = false;
@@ -55,7 +52,7 @@ class _HomePageState extends State<HomePage> {
         _isFetchingData = true;
       });
 
-      final response = await ArticleController.getInstance.getArticles(_pageSize, _currentPage);
+      final response = await ArticleController.getInstance.getArticles();
 
       if(response.isEmpty){
         setState(() {
@@ -107,26 +104,62 @@ class _HomePageState extends State<HomePage> {
       onWillPop: () => Future.value(false),
       child: SafeArea(
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text("Space News"),
-            backgroundColor: AppTheme.primaryColor,
-            foregroundColor: Colors.white,
-          ),
+          appBar: _appBar(),
             body: StreamBuilder<List<Article>>(
               stream: dataStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const LoadingScreen();
                 } else if (snapshot.hasError) {
-                  CustomError error = snapshot.error as CustomError;
                   return ErrorPage(refreshPage: _refreshPage,);
                 } else {
-                  return _articleList();
+                  return Container(
+                      child: Column(
+                        children: [
+                          Container(
+                            width: width,
+                            child: Text("Top Headlines"),
+                          ),
+                          _articleList(),
+                        ],
+                      )
+                  );
                 }
               },
             ),
           ),
         ),
+    );
+  }
+
+  _appBar(){
+    return AppBar(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            child: Row(
+              children: [
+                IconButton(
+                    onPressed:(){},
+                    icon: const Icon(Icons.person)
+                ),
+                const Text(Constants.appName, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 20),),
+              ],
+            ),
+          ),
+          Container(
+            child: const Row(
+              children: [
+                Icon(Icons.navigation),
+                Text(Constants.country, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18),)
+              ],
+            ),
+          )
+        ],
+      ),
+      backgroundColor: AppTheme.highlightedTheme,
+      foregroundColor: Colors.white,
     );
   }
 
@@ -153,7 +186,7 @@ class _HomePageState extends State<HomePage> {
                 height: height / 12,
                 child: const Center(
                   child: CircularProgressIndicator(
-                    color: AppTheme.primaryColor,
+                    color: AppTheme.highlightedTheme,
                   ),
                 ),
               );

@@ -1,8 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:news_app/utils/constants.dart';
-import 'package:news_app/widgets/snackbar.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class WebViewPage extends StatelessWidget{
@@ -24,7 +21,7 @@ class WebViewPage extends StatelessWidget{
           child: Scaffold(
             appBar: AppBar(
               title: const Text('Space News'),
-              backgroundColor: AppTheme.primaryColor,
+              backgroundColor: AppTheme.highlightedTheme,
               foregroundColor: Colors.white,
               leading: IconButton(
                 onPressed: (){
@@ -88,7 +85,7 @@ class _WebViewComponentState extends State<_WebViewComponent> {
     return Container(
       width: width,
       child: _isLoading
-          ? const Center(child: CircularProgressIndicator( color: AppTheme.primaryColor,),)
+          ? const Center(child: CircularProgressIndicator( color: AppTheme.highlightedTheme,),)
           : WebViewWidget(controller: controller,)
     );
   }

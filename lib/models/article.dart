@@ -1,44 +1,50 @@
-import 'package:json_annotation/json_annotation.dart';
-part 'article.g.dart';
+import 'package:uuid/uuid.dart';
 
-@JsonSerializable()
 class Article{
-  @JsonKey(name : "id", required: true)
-  int id;
-
-  @JsonKey(name : "title", required: true)
+  String id;
   String title;
-
-  @JsonKey(name : "url", required: true)
+  String author;
   String url;
-
-  @JsonKey(name : "image_url", required: true)
   String image;
-
-  @JsonKey(name : "news_site", required: true)
-  String newsSite;
-
-  @JsonKey(name : "summary", required: true)
+  String source;
   String summary;
-
-  @JsonKey(name : "published_at", required: true)
   String publishedAt;
-
-  @JsonKey(name : "updated_at", required: true)
-  String updatedAt;
 
   Article({
     required this.id,
     required this.title,
+    required this.author,
     required this.summary,
     required this.image,
-    required this.newsSite,
+    required this.source,
     required this.url,
     required this.publishedAt,
-    required this.updatedAt
   });
 
-  factory Article.fromJson(Map<String, dynamic> json) => _$ArticleFromJson(json);
+  factory Article.fromJson(Map<String, dynamic> json){
+    const uuid = Uuid();
+    return Article(
+        id: uuid.v4(),
+        title: json["title"] ?? "",
+        author: json["author"] ?? "",
+        summary: json["description"] ?? "",
+        image: json["urlToImage"] ?? "",
+        source: json["source"]["name"] ?? "",
+        url: json["url"] ?? "",
+        publishedAt: json["publishedAt"]
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$ArticleToJson(this);
+  Map<String, dynamic> toJson(){
+   return {
+     "id" : id,
+     "title" : title,
+     "author" : author,
+     "summary" : summary,
+     "image" : image,
+     "source" : source,
+     "url" : url,
+     "publishedAt" : publishedAt
+   };
+  }
 }

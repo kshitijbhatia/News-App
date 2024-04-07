@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/models/article.dart';
-import 'package:news_app/screens/web_view_page.dart';
+import 'package:news_app/screens/Web_View_Page/web_view_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:news_app/utils/utils.dart';
 
@@ -97,7 +97,7 @@ class _ArticleCardState extends State<ArticleCard>{
             child: SizedBox(
               width: width/8,
               height: height/16,
-              child: const CircularProgressIndicator(color: AppTheme.primaryColor,),
+              child: const CircularProgressIndicator(color: AppTheme.highlightedTheme,),
             ),
           ),
         );
@@ -158,7 +158,7 @@ class _ArticleCardState extends State<ArticleCard>{
                       text: _seeMore ? ' show less' : '  ...show more',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.primaryColor,
+                        color: AppTheme.highlightedTheme,
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () => setState(() => _changeSeeMore())
@@ -180,7 +180,7 @@ class _ArticleCardState extends State<ArticleCard>{
       height: height/22,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: 10),
-      child: Text(Utils.getDaysAgo(widget.article.updatedAt), style: const TextStyle(fontSize: 16),),
+      child: Text(Utils.getDaysAgo(widget.article.publishedAt), style: const TextStyle(fontSize: 16),),
     );
   }
 

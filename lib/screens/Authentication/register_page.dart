@@ -1,9 +1,9 @@
-import 'dart:developer';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:news_app/network/Authentication_Service/authentication_service.dart';
+import 'package:news_app/network/authentication_service.dart';
 import 'package:news_app/utils/constants.dart';
+import 'package:news_app/widgets/snackbar.dart';
 import 'package:news_app/widgets/submit_button.dart';
 import 'package:news_app/widgets/text_input.dart';
 
@@ -42,8 +42,16 @@ class _RegisterPageState extends State<RegisterPage> {
     String pass = _passController.text;
     try{
       await Authentication.getInstance.signUp(name, email, pass);
+    }on FirebaseAuthException catch(err){
+      if(err.code == "email-already-in-use"){
+        setState(() => _emailError = "Email Already Exists");
+      }else if(err.code == "invalid-email"){
+        setState(() => _emailError = "Please enter a valid email");
+      }else if(err.code == "weak-password"){
+        setState(() => _passError = err.message);
+      }
     }catch(err){
-      log(err.toString());
+      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,"Error Occurred. Please try again"));
     }
   }
 

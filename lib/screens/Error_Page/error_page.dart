@@ -40,11 +40,11 @@ class _ErrorPageState extends State<ErrorPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text('Something went wrong. Please try again', style: TextStyle(fontSize: 40,color: AppTheme.primaryColor, fontWeight: FontWeight.w300),),
+              const Text('Something went wrong. Please try again', style: TextStyle(fontSize: 40,color: AppTheme.highlightedTheme, fontWeight: FontWeight.w300),),
               30.h,
               TextButton(
                   style: const ButtonStyle(
-                      backgroundColor: MaterialStatePropertyAll(AppTheme.primaryColor),
+                      backgroundColor: MaterialStatePropertyAll(AppTheme.highlightedTheme),
                       padding: MaterialStatePropertyAll(EdgeInsets.symmetric(vertical: 10, horizontal: 30))
                   ),
                   onPressed: (){

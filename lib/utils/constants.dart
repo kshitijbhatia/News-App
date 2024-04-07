@@ -3,13 +3,16 @@ import 'package:flutter/cupertino.dart';
 class Constants{
   Constants._();
 
-  static const baseUrl = 'https://api.spaceflightnewsapi.net/';
-  static const getArticlesEndpoint = 'v4/articles/';
+  static const country = "IN";
+  static const newsCategory = "business";
+  static const apiKey = "fd32f8ae57794159b0719d981ba2988a";
+  static const baseUrl = 'https://newsapi.org';
+  static const getArticlesEndpoint = '/v2/top-headlines';
   static const String appName = "MyNews";
 }
 
 class AppTheme{
-  static const Color primaryColor = Color.fromRGBO(24, 56, 131, 1);
+  // static const Color primaryColor = Color.fromRGBO(24, 56, 131, 1);
   static const Color authPageBackground = Color(0xFFF5F9FD);
   static const Color highlightedTheme = Color(0xFF0C54BE);
 }
