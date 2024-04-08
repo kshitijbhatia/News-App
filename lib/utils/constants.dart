@@ -12,8 +12,7 @@ class Constants{
 }
 
 class AppTheme{
-  // static const Color primaryColor = Color.fromRGBO(24, 56, 131, 1);
-  static const Color authPageBackground = Color(0xFFF5F9FD);
+  static const Color pageBackground = Color(0xFFF5F9FD);
   static const Color highlightedTheme = Color(0xFF0C54BE);
 }
 

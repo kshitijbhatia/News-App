@@ -1,11 +1,19 @@
+import 'dart:developer';
+
 import 'package:dio/dio.dart';
+import 'package:news_app/models/article.dart';
 
 class Utils{
 
-  static String getHalfSummary(String summary){
-    if(summary == "")return "";
+  static String getHalfSummary(Article article){
+
+    String summary = article.summary;
+    if(summary == "")return article.title;
+
     List<String> wordList = summary.split(' ');
-    wordList = wordList.sublist(0, wordList.length~/2);
+    if(wordList.length <= 10) return summary;
+    wordList = wordList.sublist(0, 10);
+
     String halfSummary = "";
     for (var element in wordList) {
       halfSummary += element;

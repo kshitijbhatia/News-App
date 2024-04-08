@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:news_app/network/authentication_service.dart';
+import 'package:news_app/controllers/user_controller.dart';
+import 'package:news_app/models/user.dart';
+import 'package:news_app/network/authentication.dart';
+import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:news_app/widgets/snackbar.dart';
 import 'package:news_app/widgets/submit_button.dart';
@@ -41,7 +44,8 @@ class _RegisterPageState extends State<RegisterPage> {
     String email = _emailController.text;
     String pass = _passController.text;
     try{
-      await Authentication.getInstance.signUp(name, email, pass);
+      await UserController.signUp(name, email, pass);
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage(),));
     }on FirebaseAuthException catch(err){
       if(err.code == "email-already-in-use"){
         setState(() => _emailError = "Email Already Exists");
@@ -66,7 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Container(
             width: width,
             height: height,
-            color: AppTheme.authPageBackground,
+            color: AppTheme.pageBackground,
             child: Column(
               children: [
                 _header(),
@@ -86,7 +90,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return Container(
       width: width,
       height: height / 10,
-      color: AppTheme.authPageBackground,
+      color: AppTheme.pageBackground,
       padding: const EdgeInsets.only(left: 15,),
       alignment: Alignment.centerLeft,
       child: const Text(

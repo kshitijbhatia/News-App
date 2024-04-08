@@ -17,82 +17,24 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final ScrollController _scrollController = ScrollController();
-  StreamController<List<Article>> _dataStreamController = StreamController<List<Article>>();
+  List<Article> _articles = [];
 
-  Stream<List<Article>> get dataStream => _dataStreamController.stream;
-
-  final List<Article> _articles = [];
-
-  bool _isFetchingData = false;
-  bool _stopFetchingData = false;
-
-
-
-  @override
-  void initState() {
-    super.initState();
-    _getArticles();
-    _scrollController.addListener(() {
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final currentScroll = _scrollController.position.pixels;
-      if (maxScroll == currentScroll && !_stopFetchingData) {
-        _getArticles();
-      }
-    });
-  }
-
-
-  Future<void> _getArticles() async {
-    if (_isFetchingData) {
-      return;
-    }
+  Future<List<Article>> _getArticles() async {
     try {
-      setState(() {
-        _isFetchingData = true;
-      });
-
       final response = await ArticleController.getInstance.getArticles();
-
-      if(response.isEmpty){
-        setState(() {
-          _stopFetchingData = true;
-        });
-        return;
-      }
-
-      _articles.addAll(response);
-      _dataStreamController.add(_articles);
-      _currentPage++;
-
+      return response;
     } on CustomError catch (error) {
       log('Home Page : ${error.toString()}');
-      _dataStreamController.addError(error);
-    } finally {
-      setState(() {
-        _isFetchingData = false;
-      });
+      rethrow;
     }
   }
 
   Future<void> _refreshPage() async {
     setState(() {
-      _currentPage = 0;
-      _stopFetchingData = false;
       _articles.clear();
     });
-
-    _dataStreamController.close();
-    _dataStreamController = StreamController<List<Article>>();
-
     await _getArticles();
     return Future.value();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _dataStreamController.close();
   }
 
   @override
@@ -105,32 +47,25 @@ class _HomePageState extends State<HomePage> {
       child: SafeArea(
         child: Scaffold(
           appBar: _appBar(),
-            body: StreamBuilder<List<Article>>(
-              stream: dataStream,
+            body: FutureBuilder<List<Article>>(
+              future: _getArticles(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const LoadingScreen();
                 } else if (snapshot.hasError) {
                   return ErrorPage(refreshPage: _refreshPage,);
                 } else {
-                  return Container(
-                      child: Column(
-                        children: [
-                          Container(
-                            width: width,
-                            child: Text("Top Headlines"),
-                          ),
-                          _articleList(),
-                        ],
-                      )
-                  );
+                  _articles = snapshot.data!;
+                  return _articleList();
                 }
               },
-            ),
+            )
           ),
         ),
     );
   }
+
+
 
   _appBar(){
     return AppBar(
@@ -144,6 +79,7 @@ class _HomePageState extends State<HomePage> {
                     onPressed:(){},
                     icon: const Icon(Icons.person)
                 ),
+                10.w,
                 const Text(Constants.appName, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 20),),
               ],
             ),
@@ -169,28 +105,27 @@ class _HomePageState extends State<HomePage> {
     return Container(
       width: width,
       height: height,
+      color: AppTheme.pageBackground,
       child: RefreshIndicator(
         onRefresh: _refreshPage,
         child: ListView.builder(
-          controller: _scrollController,
           itemCount: _articles.length + 1,
           itemBuilder: (context, index) {
+            if(index == 0){
+              return Container(
+                width: width,
+                height: height/16,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 15),
+                child: const Text("Top Headlines", style: TextStyle(fontFamily: "Poppins", fontWeight: FontWeight.w600, fontSize: 18),),
+              );
+            }
             if (index < _articles.length) {
-              Article currentArticle = _articles[index];
+              Article currentArticle = _articles[index - 1];
               return ArticleCard(
                 article: currentArticle,
               );
-            } else if (!_stopFetchingData && index == _articles.length) {
-              return Container(
-                width: width,
-                height: height / 12,
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    color: AppTheme.highlightedTheme,
-                  ),
-                ),
-              );
-            } else {
+            }else {
               return Container();
             }
           },

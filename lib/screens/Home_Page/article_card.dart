@@ -36,30 +36,47 @@ class _ArticleCardState extends State<ArticleCard>{
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.all(Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black45,
-            blurRadius: 10,
-            offset: Offset(-10, 5)
-          ),
-          BoxShadow(
-              color: Colors.black45,
-              blurRadius: 10,
-              offset: Offset(10, 5)
-          )
-        ]
       ),
       child: GestureDetector(
         onTap: (){
           Navigator.push(context, MaterialPageRoute(builder: (context) => WebViewPage(url: widget.article.url),));
         },
-        child: Column(
+        child: Row(
+          crossAxisAlignment: _seeMore ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-              _articleImage(),
-              _articleTitle(),
-              _articleSummary(),
-              _articleDate()
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _articleSource(),
+                  _articleSummary(),
+                  _articleDate()
+                ],
+              ),
+            ),
+            _articleImage()
           ],
+        )
+      ),
+    );
+  }
+
+  // Source for the Article
+
+  Widget _articleSource(){
+    double width = ScreenSize.getWidth(context);
+    double height = ScreenSize.getHeight(context);
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(10),
+      child: Text(
+        widget.article.source,
+        style: const TextStyle(
+          fontFamily: "Poppins",
+          color: Colors.black,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -74,9 +91,11 @@ class _ArticleCardState extends State<ArticleCard>{
       imageUrl: widget.article.image,
       imageBuilder: (context, imageProvider) {
         return Container(
-            width: width,
-            height : height/4,
+            width: width/2.6,
+            height: height/6.5,
+            margin: _seeMore ? const EdgeInsets.only(top : 15) : null,
             decoration: BoxDecoration(
+                color: Colors.red,
                 borderRadius: BorderRadius.circular(20),
                 image: DecorationImage(
                     image: imageProvider,
@@ -87,8 +106,8 @@ class _ArticleCardState extends State<ArticleCard>{
       },
       progressIndicatorBuilder: (context, url, progress) {
         return Container(
-          width: width,
-          height: height/4,
+          width: width/2.6,
+          height: height/6.5,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               color: Colors.grey
@@ -104,12 +123,12 @@ class _ArticleCardState extends State<ArticleCard>{
       },
       errorWidget: (context, url, error) {
         return Container(
-            width: width,
-            height : height/4,
+            width: width/2.6,
+            height: height/6.5,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 image : const DecorationImage(
-                    image: AssetImage('assets/Rocket.jpg'),
+                    image: AssetImage('assets/breaking_news.jpg'),
                     fit: BoxFit.fill
                 )
             )
@@ -118,47 +137,29 @@ class _ArticleCardState extends State<ArticleCard>{
     );
   }
 
-  // Title for the Article
-
-  Widget _articleTitle(){
-    double width = ScreenSize.getWidth(context);
-    double height = ScreenSize.getHeight(context);
-    return Container(
-      width: width,
-      padding: const EdgeInsets.all(10),
-      child: Text(
-        widget.article.title,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 22,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
   // Summary of the Article
 
   Widget _articleSummary(){
-    double width = ScreenSize.getWidth(context);
-    double height = ScreenSize.getHeight(context);
+
+    String summary = widget.article.summary;
+    if(summary == ""){
+      summary = widget.article.title;
+    }
 
     return Container(
-        width: width,
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.only(left: 10, right: 5),
         child: RichText(
             text: TextSpan(
-              style: const TextStyle(fontSize: 18, color: Colors.black),
+              style: const TextStyle(fontFamily: "Poppins",fontSize: 18,fontWeight: FontWeight.w400 , color: Colors.black),
               children: <TextSpan>[
                 TextSpan(
-                  text: _seeMore ? widget.article.summary : Utils.getHalfSummary(widget.article.summary),
+                  text: _seeMore ? summary : Utils.getHalfSummary(widget.article),
                 ),
                 widget.article.summary != ""
                     ? TextSpan(
-                      text: _seeMore ? ' show less' : '  ...show more',
+                      text: _seeMore ? '' : '...',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.highlightedTheme,
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () => setState(() => _changeSeeMore())
@@ -176,11 +177,10 @@ class _ArticleCardState extends State<ArticleCard>{
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
     return Container(
-      width: width,
       height: height/22,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: 10),
-      child: Text(Utils.getDaysAgo(widget.article.publishedAt), style: const TextStyle(fontSize: 16),),
+      child: Text(Utils.getDaysAgo(widget.article.publishedAt), style: const TextStyle(fontFamily: "Poppins",fontSize: 16),),
     );
   }
 

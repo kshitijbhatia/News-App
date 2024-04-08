@@ -16,7 +16,6 @@ class ArticleController{
       final response = await _api.getArticles();
       final List<Map<String, dynamic>> resListJson = List<Map<String, dynamic>>.from(response["articles"]);
       List<Article> articles = resListJson.map((json) {
-        log('$json');
         return Article.fromJson(json);
       }).toList();
       return articles;

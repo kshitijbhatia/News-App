@@ -20,7 +20,7 @@ class WebViewPage extends StatelessWidget{
         child: SafeArea(
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('Space News'),
+              title: const Text(Constants.appName, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 20),),
               backgroundColor: AppTheme.highlightedTheme,
               foregroundColor: Colors.white,
               leading: IconButton(

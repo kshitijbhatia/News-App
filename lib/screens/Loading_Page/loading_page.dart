@@ -18,11 +18,11 @@ class LoadingScreen extends StatelessWidget {
             baseColor: Colors.grey.shade400,
             highlightColor: Colors.grey.shade100,
             child: ListView.builder(
-                itemCount: 4,
+                itemCount: 8,
                 itemBuilder: (context, index) {
                   return Container(
                     width: width,
-                    height: height/2,
+                    height: height/5,
                     margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                     decoration: const BoxDecoration(
                         color: Colors.white,
