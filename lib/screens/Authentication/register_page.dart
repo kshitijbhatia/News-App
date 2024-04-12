@@ -45,7 +45,7 @@ class _RegisterPageState extends State<RegisterPage> {
     String pass = _passController.text;
     try{
       await UserController.signUp(name, email, pass);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage(),));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
     }on FirebaseAuthException catch(err){
       if(err.code == "email-already-in-use"){
         setState(() => _emailError = "Email Already Exists");

@@ -150,7 +150,7 @@ class _ArticleCardState extends State<ArticleCard>{
         padding: const EdgeInsets.only(left: 10, right: 5),
         child: RichText(
             text: TextSpan(
-              style: const TextStyle(fontFamily: "Poppins",fontSize: 18,fontWeight: FontWeight.w400 , color: Colors.black),
+              style: const TextStyle(fontFamily: "Poppins",fontSize: 16,fontWeight: FontWeight.w400 , color: Colors.black),
               children: <TextSpan>[
                 TextSpan(
                   text: _seeMore ? summary : Utils.getHalfSummary(widget.article),

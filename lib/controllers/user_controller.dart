@@ -17,7 +17,6 @@ class UserController{
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString("user", jsonEncode(response));
-      await prefs.setBool("remember", true);
 
     } on FirebaseAuthException catch(err){
       rethrow;
@@ -30,12 +29,8 @@ class UserController{
   static signIn(String email, String password) async {
     try{
       final response = await _authService.signIn(email, password);
-
-      log('$response');
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString("user", jsonEncode(response));
-      await prefs.setBool("remember", true);
 
     }on FirebaseAuthException catch(err){
       rethrow;
