@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
+import 'package:news_app/models/user.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
 import 'package:news_app/screens/Error_Page/error_page.dart';
+import 'package:news_app/screens/Update_Page/update_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:news_app/screens/Home_Page/article_card.dart';
 import 'package:news_app/screens/Loading_Page/loading_page.dart';
@@ -22,7 +24,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _isComplete = false;
   bool _showProfile = false;
-  late Map<String, dynamic> user;
+  late AppUser user;
   List<Article> _articles = [];
 
   Future<void> _getArticles() async {
@@ -33,7 +35,7 @@ class _HomePageState extends State<HomePage> {
         _articles = response;
       });
       final prefs = await SharedPreferences.getInstance();
-      user = jsonDecode(prefs.getString("user")!);
+      user = AppUser.fromJson(jsonDecode(prefs.getString("user")!));
     } on CustomError catch (error) {
       log(error.toString());
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ErrorPage(refreshPage: _refreshPage),));
@@ -78,6 +80,7 @@ class _HomePageState extends State<HomePage> {
 
   _appBar(){
     return AppBar(
+      automaticallyImplyLeading: false,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -175,19 +178,19 @@ class _HomePageState extends State<HomePage> {
             child: Container(
               width: width/2.5,
               alignment: Alignment.center,
-              child: Text("Hi ${user["name"]}", style: const TextStyle(fontFamily: "Poppins", fontWeight: FontWeight.w500, fontSize: 16),),
+              child: Text("Hi ${user.name}", style: const TextStyle(fontFamily: "Poppins", fontWeight: FontWeight.w500, fontSize: 16),),
             ),
           ),
           Expanded(
             flex: 1,
             child: GestureDetector(
               onTap: (){
-                log("Update Profile Button Pressed");
+                Navigator.push(context, MaterialPageRoute(builder: (context) => UpdatePage(user: user,),));
               },
               child: Container(
                 width: width/2.5,
                 alignment: Alignment.center,
-                child: const Text("Update Profile", style: TextStyle(fontFamily: "Poppins", fontWeight: FontWeight.w500, fontSize: 16),),
+                child: const Text("View Profile", style: TextStyle(fontFamily: "Poppins", fontWeight: FontWeight.w500, fontSize: 16),),
               ),
             ),
           ),

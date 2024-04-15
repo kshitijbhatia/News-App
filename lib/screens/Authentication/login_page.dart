@@ -51,6 +51,7 @@ class _LoginPageState extends State<LoginPage> {
     String pass = _passController.text;
     try{
       await UserController.signIn(email, pass);
+      log('Push Replacement being called');
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
     } on FirebaseAuthException catch(err){
       log(err.toString());

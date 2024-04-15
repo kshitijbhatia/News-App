@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:news_app/models/user.dart';
@@ -20,12 +21,19 @@ class Authentication{
         'email' : email,
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
-        'updatedOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString()
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
       };
 
       await users.doc(_firebaseAuth.currentUser!.uid).set(data);
 
-      return data;
+      return {
+        'uid' : _firebaseAuth.currentUser!.uid.toString(),
+        'name' : name,
+        'email' : email,
+        'password' : password,
+        'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
+      };
 
     } on FirebaseAuthException catch(err){
       rethrow;
@@ -39,31 +47,62 @@ class Authentication{
       final currentUser = await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
       final user = await users.doc(currentUser.user!.uid).get();
       if(!user.exists){
-        throw FirebaseAuthException(code: "user-not-found");
+        throw Exception("user-not-found");
       }
       final Map<String, dynamic> data = user.data() as Map<String, dynamic>;
       return {
+        'uid' : _firebaseAuth.currentUser!.uid,
         'name' : data["name"],
         'email' : email,
         'password' : password,
-        'createdOn' : data["createdOn"].toString(),
-        'updatedOn' : data["updatedOn"].toString()
+        'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
       };
 
-    }on FirebaseAuthException catch(err){
+    } on FirebaseAuthException catch(err){
+      log('Firebase Exception : $err');
       rethrow;
-    }catch(err){
+    } catch(err){
+      log('API Service : $err');
       rethrow;
     }
   }
 
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount(AppUser user) async {
     try{
-      final currentUser = _firebaseAuth.currentUser;
       await _firebaseAuth.currentUser!.delete();
-      await users.doc(_firebaseAuth.currentUser!.uid).delete();
-
+      await users.doc(user.uid).delete();
     }  on FirebaseAuthException catch(err){
+      log('$err');
+      rethrow;
+    } catch(err){
+      log('API Service : $err');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> updateDetails(AppUser user,String newName, String newEmail, String newPassword) async {
+    try{
+      if(newName != "")await _firebaseAuth.currentUser!.updateDisplayName(newName);
+      if(newEmail != "")await _firebaseAuth.currentUser!.updateEmail(newEmail);
+      if(newPassword != "")await _firebaseAuth.currentUser!.updatePassword(newPassword);
+
+      await users.doc(user.uid).update({
+        'name' : newName == "" ? user.name : newName,
+        'email' : newEmail == "" ? user.email : newEmail,
+        'password' : newPassword == "" ? user.password : newPassword
+      });
+
+      return {
+        "uid" : user.uid,
+        "name" : newName == "" ? user.name : newName,
+        "email" : newEmail == "" ? user.email : newEmail,
+        "password" : newPassword == "" ? user.password : newPassword,
+        'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
+      };
+
+    } on FirebaseAuthException catch(err){
       rethrow;
     } catch(err){
       rethrow;

@@ -21,10 +21,14 @@ class _ErrorPageState extends State<ErrorPage> {
       onWillPop: (){
         return Future.value(false);
       },
-      child: Container(
-        width: width,
-        height: height,
-        child: _errorMessage(),
+      child: SafeArea(
+        child: Scaffold(
+          body: Container(
+            width: width,
+            height: height,
+            child: _errorMessage(),
+          ),
+        ),
       ),
     );
   }

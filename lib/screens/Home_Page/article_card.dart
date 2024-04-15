@@ -180,7 +180,7 @@ class _ArticleCardState extends State<ArticleCard>{
       height: height/22,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: 10),
-      child: Text(Utils.getDaysAgo(widget.article.publishedAt), style: const TextStyle(fontFamily: "Poppins",fontSize: 16),),
+      child: Text(Utils.getDaysAgo(widget.article.publishedAt), style: AppTheme.getStyle(color: const Color.fromRGBO(0, 0, 0, 0.6), fs: 14, fw: FontWeight.w200),),
     );
   }
 

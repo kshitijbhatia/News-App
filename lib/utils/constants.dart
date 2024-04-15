@@ -14,6 +14,15 @@ class Constants{
 class AppTheme{
   static const Color pageBackground = Color(0xFFF5F9FD);
   static const Color highlightedTheme = Color(0xFF0C54BE);
+
+  static TextStyle getStyle({required Color color,required double fs, required FontWeight fw}){
+    return TextStyle(
+      color: color,
+      fontFamily: "Poppins",
+      fontSize: fs,
+      fontWeight: fw,
+    );
+  }
 }
 
 class ScreenSize{

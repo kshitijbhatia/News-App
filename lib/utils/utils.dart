@@ -1,6 +1,4 @@
-import 'dart:developer';
-
-import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 import 'package:news_app/models/article.dart';
 
 class Utils{
@@ -45,5 +43,11 @@ class Utils{
       return years == 1 ? '1 year ago' : '$years years ago';
     }
     return days == 1 ? '1 day ago' : '$days days ago';
+  }
+
+  static String getDate(String createdAt){
+    DateTime date = DateTime.parse(createdAt);
+    DateFormat formatter = DateFormat("dd MMMM, yyyy");
+    return formatter.format(date);
   }
 }
