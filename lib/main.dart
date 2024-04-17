@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/firebase_options.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
@@ -11,6 +12,9 @@ void main() async {
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform
   );
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
   runApp(const MyApp());
 }
 
