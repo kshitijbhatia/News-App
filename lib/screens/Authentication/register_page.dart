@@ -160,7 +160,7 @@ class _RegisterPageState extends State<RegisterPage> {
               await _registerUser();
             },
           ),
-          20.h,
+          10.h,
           RichText(
             text: TextSpan(
               style: const TextStyle(

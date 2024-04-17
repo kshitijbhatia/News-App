@@ -82,15 +82,16 @@ class _TextInputState extends State<TextInput> {
             ? IconButton(
               onPressed: _changePasswordVisibility,
               icon: _showPassword
-                  ? const Icon(Icons.visibility)
-                  : const Icon(Icons.visibility_off),)
+                  ? const Icon(Icons.visibility, size: 20,)
+                  : const Icon(Icons.visibility_off, size: 20,),)
             : (widget.controller.text.isNotEmpty
                 ? IconButton(
                   onPressed: (){
                     widget.controller.text = "";
                     widget.removeError();
                     },
-                  icon: const Icon(Icons.close))
+                  icon: const Icon(Icons.close, size: 20,),
+                )
                 : 0.h
         )
       )

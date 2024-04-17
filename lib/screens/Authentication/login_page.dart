@@ -166,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
               _loginUser();
             },
           ),
-          20.h,
+          10.h,
           RichText(
             text: TextSpan(
               style: const TextStyle(

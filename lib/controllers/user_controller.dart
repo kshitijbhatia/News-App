@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:news_app/models/user.dart';
 import 'package:news_app/network/authentication.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,6 +47,8 @@ class UserController{
   static deleteAccount(AppUser user) async {
     try{
       await Authentication.getInstance.deleteAccount(user);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString("user", "");
     } on FirebaseAuthException catch(err){
       log('$err');
       rethrow;
@@ -61,6 +66,28 @@ class UserController{
     } on FirebaseAuthException catch(err){
       rethrow;
     } catch(err){
+      rethrow;
+    }
+  }
+
+  static Future<String> updateImage(AppUser user, XFile? file) async {
+    try{
+      String imageUrl = "";
+
+      if(file != null) {
+        Reference referenceRoot = FirebaseStorage.instance.ref();
+        Reference referenceDirImages = referenceRoot.child('images');
+        Reference referenceImageToUpload = referenceDirImages.child('image-${user.uid}');
+        await referenceImageToUpload.putFile(File(file.path));
+        imageUrl = await referenceImageToUpload.getDownloadURL();
+      }
+
+      final response = await Authentication.getInstance.updateImage(user, imageUrl);
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString("user", jsonEncode(response));
+
+      return imageUrl;
+    }catch(err){
       rethrow;
     }
   }

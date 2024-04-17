@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:news_app/controllers/user_controller.dart';
 import 'package:news_app/models/user.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
@@ -20,6 +22,8 @@ class UpdatePage extends StatefulWidget{
 }
 
 class _UpdatePageState extends State<UpdatePage> {
+
+  XFile? file;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -45,7 +49,7 @@ class _UpdatePageState extends State<UpdatePage> {
       String newName = _nameController.text == widget.user.name ? "" : _nameController.text;
       String newEmail = _emailController.text == widget.user.email ? "" : _emailController.text;
       String newPassword = _passController.text == widget.user.password ? "" : _passController.text;
-      if(newName != "" || newEmail != "" || newPassword == ""){
+      if(newName != "" || newEmail != "" || newPassword != ""){
         await UserController.updateDetails(widget.user, newName, newEmail, newPassword);
       }
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),),);
@@ -64,17 +68,28 @@ class _UpdatePageState extends State<UpdatePage> {
         ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Unknown Error Occurred"));
       }
     }catch(err){
-      log('$err');
+      log('UI : $err');
       ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error Occurred while Deleting Account"));
+    }
+  }
+
+  _updateImage() async {
+    try{
+      ImagePicker imagePicker = ImagePicker();
+      file = await imagePicker.pickImage(source: ImageSource.gallery);
+      final response = await UserController.updateImage(widget.user, file);
+      log(response);
+      setState(() => widget.user.imageUrl = response);
+    }catch(err){
+      log('Update Image Error : $err');
+      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error occurred"));
     }
   }
 
   _deleteAccount() async {
     try{
       await UserController.deleteAccount(widget.user);
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString("user", "");
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
+      Navigator.pop(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
     }on FirebaseAuthException catch(err){
       if(err.code == "network-request-failed" || err.code == "too-many-requests"){
         ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "No Internet Connection"));
@@ -122,9 +137,14 @@ class _UpdatePageState extends State<UpdatePage> {
         child: Column(
         children: [
           10.h,
-          const CircleAvatar(
-            minRadius: 18,
-            child: Image(image: AssetImage("assets/user.webp")),
+          GestureDetector(
+            onTap: () {
+              _updateImage();
+            },
+            child:
+            widget.user.imageUrl == ""
+                ? const Image(image: AssetImage('assets/user.webp'),)
+                : Image(image: NetworkImage(widget.user.imageUrl))
           ),
           10.h,
           Container(
@@ -175,7 +195,6 @@ class _UpdatePageState extends State<UpdatePage> {
               TextButton(
                   onPressed: (){
                     if(_formKey.currentState!.validate()){
-                      log('${_nameController.text} ${_emailController.text} ${_passController.text}');
                       _updateDetails();
                     }
                   },
@@ -226,9 +245,7 @@ class _UpdatePageState extends State<UpdatePage> {
                 child: fieldChanged
                   ? TextFormField(
                   validator: (value) {
-                    log('1');
                     if(value == null || value.trim().isEmpty){
-                      log('2') ;
                       return "Please enter some text";
                     }
                     return null;

@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:news_app/models/user.dart';
 
 class Authentication{
@@ -21,7 +22,8 @@ class Authentication{
         'email' : email,
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
-        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
+        'imageUrl' : ""
       };
 
       await users.doc(_firebaseAuth.currentUser!.uid).set(data);
@@ -32,7 +34,8 @@ class Authentication{
         'email' : email,
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
-        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
+        'imageUrl' : ""
       };
 
     } on FirebaseAuthException catch(err){
@@ -56,7 +59,8 @@ class Authentication{
         'email' : email,
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
-        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
+        'imageUrl' : ""
       };
 
     } on FirebaseAuthException catch(err){
@@ -72,6 +76,13 @@ class Authentication{
     try{
       await _firebaseAuth.currentUser!.delete();
       await users.doc(user.uid).delete();
+
+      if(user.imageUrl != ""){
+        Reference referenceRoot = FirebaseStorage.instance.ref();
+        Reference referenceDirImages = referenceRoot.child('images');
+        Reference referenceImageToUpload = referenceDirImages.child('image-${user.uid}');
+        await referenceImageToUpload.delete();
+      }
     }  on FirebaseAuthException catch(err){
       log('$err');
       rethrow;
@@ -90,7 +101,7 @@ class Authentication{
       await users.doc(user.uid).update({
         'name' : newName == "" ? user.name : newName,
         'email' : newEmail == "" ? user.email : newEmail,
-        'password' : newPassword == "" ? user.password : newPassword
+        'password' : newPassword == "" ? user.password : newPassword,
       });
 
       return {
@@ -99,12 +110,34 @@ class Authentication{
         "email" : newEmail == "" ? user.email : newEmail,
         "password" : newPassword == "" ? user.password : newPassword,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
-        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString()
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
+        'imageUrl' : user.imageUrl
       };
 
     } on FirebaseAuthException catch(err){
       rethrow;
     } catch(err){
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> updateImage(AppUser user,String imageUrl) async{
+    try{
+      await _firebaseAuth.currentUser!.updatePhotoURL(imageUrl);
+      await users.doc(user.uid).update({
+        "imageUrl" : imageUrl
+      });
+
+      return {
+        "uid" : user.uid,
+        "name" : user.name,
+        "email" : user.email,
+        "password" : user.password,
+        'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
+        'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
+        'imageUrl' : imageUrl
+      };
+    }catch(err){
       rethrow;
     }
   }

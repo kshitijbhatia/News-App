@@ -5,9 +5,18 @@ class AppUser{
   String password;
   String createdOn;
   String lastSignIn;
+  String imageUrl;
 
 
-  AppUser({required this.uid,required this.name, required this.email, required this.password, required this.createdOn, required this.lastSignIn});
+  AppUser({
+    required this.uid,
+    required this.name,
+    required this.email,
+    required this.password,
+    required this.createdOn,
+    required this.lastSignIn,
+    required this.imageUrl,
+  });
 
   Map<String, dynamic> toJson(){
     return {
@@ -27,7 +36,8 @@ class AppUser{
         email: json["email"],
         password: json["password"],
         createdOn: json["createdOn"],
-        lastSignIn: json["lastSignIn"]
+        lastSignIn: json["lastSignIn"],
+        imageUrl : json["imageUrl"]
     );
   }
 }

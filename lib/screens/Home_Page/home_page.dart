@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
@@ -37,7 +37,6 @@ class _HomePageState extends State<HomePage> {
       final prefs = await SharedPreferences.getInstance();
       user = AppUser.fromJson(jsonDecode(prefs.getString("user")!));
     } on CustomError catch (error) {
-      log(error.toString());
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ErrorPage(refreshPage: _refreshPage),));
     }
   }
@@ -97,10 +96,14 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Container(
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.navigation),
-                Text(Constants.country, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 18),)
+                Transform.rotate(
+                    angle : math.pi/4,
+                    child: const Icon(Icons.navigation),
+                ),
+                5.w,
+                const Text(Constants.country, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16),)
               ],
             ),
           )
