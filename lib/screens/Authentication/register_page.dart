@@ -22,9 +22,15 @@ class _RegisterPageState extends State<RegisterPage> {
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
   late final TextEditingController _passController;
+
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+
   String? _nameError;
   String? _emailError;
   String? _passError;
+
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -122,6 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _nameController,
               error: _nameError,
               removeError: () => setState(() => _nameError = null),
+              focusNode: _nameFocus,
             ),
             20.h,
             TextInput(
@@ -129,6 +136,7 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _emailController,
               error: _emailError,
               removeError: () => setState(() => _emailError = null),
+              focusNode: _emailFocus,
             ),
             20.h,
             TextInput(
@@ -136,6 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _passController,
               error: _passError,
               removeError: () => setState(() => _passError = null),
+              focusNode: _passwordFocus,
             )
           ],
         ),

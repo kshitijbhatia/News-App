@@ -98,11 +98,13 @@ class _HomePageState extends State<HomePage> {
           Container(
             child: Row(
               children: [
-                Transform.rotate(
-                    angle : math.pi/4,
-                    child: const Icon(Icons.navigation),
+                Container(
+                  margin : const EdgeInsets.only(bottom: 5),
+                  child: Transform.rotate(
+                      angle : math.pi/4,
+                      child: const Icon(Icons.navigation),
+                  ),
                 ),
-                5.w,
                 const Text(Constants.country, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16),)
               ],
             ),
@@ -188,6 +190,7 @@ class _HomePageState extends State<HomePage> {
             flex: 1,
             child: GestureDetector(
               onTap: (){
+                setState(() => _showProfile = false);
                 Navigator.push(context, MaterialPageRoute(builder: (context) => UpdatePage(user: user,),));
               },
               child: Container(

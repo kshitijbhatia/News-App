@@ -21,8 +21,13 @@ class _LoginPageState extends State<LoginPage> {
 
   late final TextEditingController _emailController;
   late final TextEditingController _passController;
+
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+
   String? _emailError;
   String? _passError;
+
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -135,6 +140,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: _emailController,
               error: _emailError,
               removeError: () => setState(() => _emailError = null),
+              focusNode: _emailFocus,
             ),
             20.h,
             TextInput(
@@ -142,6 +148,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: _passController,
               error: _passError,
               removeError: () => setState(() => _passError = null),
+              focusNode: _passwordFocus,
             )
           ],
         ),

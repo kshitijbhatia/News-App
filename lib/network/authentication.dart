@@ -60,7 +60,7 @@ class Authentication{
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
         'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
-        'imageUrl' : ""
+        'imageUrl' : _firebaseAuth.currentUser!.photoURL
       };
 
     } on FirebaseAuthException catch(err){

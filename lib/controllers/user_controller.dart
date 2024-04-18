@@ -70,22 +70,16 @@ class UserController{
     }
   }
 
-  static Future<String> updateImage(AppUser user, XFile? file) async {
+  static Future<String> updateImage(AppUser user, XFile file) async {
     try{
-      String imageUrl = "";
-
-      if(file != null) {
-        Reference referenceRoot = FirebaseStorage.instance.ref();
-        Reference referenceDirImages = referenceRoot.child('images');
-        Reference referenceImageToUpload = referenceDirImages.child('image-${user.uid}');
-        await referenceImageToUpload.putFile(File(file.path));
-        imageUrl = await referenceImageToUpload.getDownloadURL();
-      }
-
+      Reference referenceRoot = FirebaseStorage.instance.ref();
+      Reference referenceDirImages = referenceRoot.child('images');
+      Reference referenceImageToUpload = referenceDirImages.child('image-${user.uid}');
+      await referenceImageToUpload.putFile(File(file.path));
+      String imageUrl = await referenceImageToUpload.getDownloadURL();
       final response = await Authentication.getInstance.updateImage(user, imageUrl);
       final prefs = await SharedPreferences.getInstance();
       prefs.setString("user", jsonEncode(response));
-
       return imageUrl;
     }catch(err){
       rethrow;

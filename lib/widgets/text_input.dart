@@ -7,13 +7,15 @@ class TextInput extends StatefulWidget {
     required this.text,
     required this.controller,
     required this.removeError,
-    required this.error
+    required this.error,
+    required this.focusNode
   });
 
   final String text;
   final TextEditingController controller;
   final String? error;
   final Function removeError;
+  final FocusNode focusNode;
 
   @override
   State<TextInput> createState() => _TextInputState();
@@ -27,9 +29,8 @@ class _TextInputState extends State<TextInput> {
 
   @override
   Widget build(BuildContext context) {
-    double width = ScreenSize.getWidth(context);
-    double height = ScreenSize.getHeight(context);
     return TextFormField(
+      focusNode: widget.focusNode,
       autovalidateMode: widget.controller.text.isEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
       controller: widget.controller,
       validator: (value) {
@@ -46,6 +47,11 @@ class _TextInputState extends State<TextInput> {
       },
       obscureText: widget.text == "Password" && !_showPassword ? true : false,
       onChanged: (value) => widget.removeError(),
+      style : AppTheme.getStyle(
+          color: Colors.black,
+          fs: 16,
+          fw: FontWeight.w200,
+      ),
       decoration: InputDecoration(
         errorText: widget.error,
         labelText: widget.text,
@@ -92,7 +98,7 @@ class _TextInputState extends State<TextInput> {
                     },
                   icon: const Icon(Icons.close, size: 20,),
                 )
-                : 0.h
+                : null
         )
       )
     );

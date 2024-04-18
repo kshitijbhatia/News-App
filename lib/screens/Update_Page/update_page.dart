@@ -1,6 +1,6 @@
 import 'dart:developer';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:news_app/controllers/user_controller.dart';
@@ -10,7 +10,7 @@ import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:news_app/utils/utils.dart';
 import 'package:news_app/widgets/snackbar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:news_app/widgets/text_input.dart';
 
 class UpdatePage extends StatefulWidget{
   const UpdatePage({super.key, required this.user});
@@ -24,17 +24,25 @@ class UpdatePage extends StatefulWidget{
 class _UpdatePageState extends State<UpdatePage> {
 
   XFile? file;
+  bool _updateImageIsComplete = true;
 
   final _formKey = GlobalKey<FormState>();
 
-  bool _nameChanged = false;
-  bool _emailChanged = false;
-  bool _passwordChanged = false;
+  // bool _nameChanged = false;
+  // bool _emailChanged = false;
+  // bool _passwordChanged = false;
+
+  String? _nameError;
+  String? _emailError;
+  String? _passwordError;
 
   late final TextEditingController _emailController;
   late final TextEditingController _nameController;
   late final TextEditingController _passController;
 
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
 
   @override
   void initState() {
@@ -77,9 +85,13 @@ class _UpdatePageState extends State<UpdatePage> {
     try{
       ImagePicker imagePicker = ImagePicker();
       file = await imagePicker.pickImage(source: ImageSource.gallery);
-      final response = await UserController.updateImage(widget.user, file);
-      log(response);
-      setState(() => widget.user.imageUrl = response);
+      if(file == null)return;
+      setState(() => _updateImageIsComplete = false);
+      final response = await UserController.updateImage(widget.user, file!);
+      setState((){
+        widget.user.imageUrl = response;
+        _updateImageIsComplete = true;
+      });
     }catch(err){
       log('Update Image Error : $err');
       ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error occurred"));
@@ -89,7 +101,7 @@ class _UpdatePageState extends State<UpdatePage> {
   _deleteAccount() async {
     try{
       await UserController.deleteAccount(widget.user);
-      Navigator.pop(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
     }on FirebaseAuthException catch(err){
       if(err.code == "network-request-failed" || err.code == "too-many-requests"){
         ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "No Internet Connection"));
@@ -141,40 +153,62 @@ class _UpdatePageState extends State<UpdatePage> {
             onTap: () {
               _updateImage();
             },
-            child:
-            widget.user.imageUrl == ""
-                ? const Image(image: AssetImage('assets/user.webp'),)
-                : Image(image: NetworkImage(widget.user.imageUrl))
+            child: Stack(
+              children: [
+                _userProfilePicture(),
+                // Center(
+                //   child: Container(
+                //     width: width/2,
+                //     height: height/4,
+                //     decoration: BoxDecoration(
+                //       // color: Colors.red,
+                //       borderRadius: BorderRadius.circular(120)
+                //     ),
+                //     alignment: Alignment.bottomRight,
+                //     padding: EdgeInsets.only(bottom: 20),
+                //     child: Icon(Icons.edit),
+                //   ),
+                // ),
+              ],
+            )
           ),
-          10.h,
+          20.h,
           Container(
             child: Text("User joined on ${Utils.getDate(widget.user.createdOn)}", style: const TextStyle(fontFamily: "Poppins", fontSize: 18, fontWeight: FontWeight.w500),),
           ),
-          10.h,
-          Form(
-            key: _formKey,
-            child : Column(
-              children: [
-                _field(
-                    prefixText: "Name",
-                    controller: _nameController,
-                    changeField: (){setState(() => _nameChanged = !_nameChanged);},
-                    fieldChanged: _nameChanged
-                ),
-                _field(
-                    prefixText: "Email",
+          15.h,
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            child: Form(
+              key: _formKey,
+              child : Column(
+                children: [
+                  TextInput(
+                      text: "Name",
+                      controller: _nameController,
+                      removeError: (){},
+                      error: _nameError,
+                      focusNode: _nameFocus,
+                  ),
+                  20.h,
+                  TextInput(
+                    text: "Email",
                     controller: _emailController,
-                    changeField: (){setState(() => _emailChanged = !_emailChanged);},
-                    fieldChanged: _emailChanged
-                ),
-                _field(
-                    prefixText: "Password",
+                    removeError: (){},
+                    error: _emailError,
+                    focusNode: _emailFocus,
+                  ),
+                  20.h,
+                  TextInput(
+                    text: "Password",
                     controller: _passController,
-                    changeField: () => setState(() => _passwordChanged = !_passwordChanged),
-                    fieldChanged: _passwordChanged
-                ),
-              ],
-            )
+                    removeError: (){},
+                    error: _passwordError,
+                    focusNode: _passwordFocus,
+                  )
+                ],
+              )
+            ),
           ),
           40.h,
           Row(
@@ -214,68 +248,94 @@ class _UpdatePageState extends State<UpdatePage> {
     );
   }
 
-  Widget _field({
-    required String prefixText,
-    required TextEditingController controller,
-    required Function changeField,
-    required bool fieldChanged
-  }) {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
-    return Container(
-      width: width,
-      height: height / 12,
-      margin: const EdgeInsets.only(left: 10, right: 10, top: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                child: Text('$prefixText : ', style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w500),),
+  Widget _userProfilePicture(){
+    double width = ScreenSize.getWidth(context);
+    double height = ScreenSize.getHeight(context);
+    if(widget.user.imageUrl == ""){
+      return const Image(image: AssetImage('assets/user.webp'),);
+    }else{
+      if(_updateImageIsComplete){
+        return CircleAvatar(
+          backgroundColor: Colors.grey,
+          backgroundImage: NetworkImage(widget.user.imageUrl),
+          minRadius: 100,
+        );
+      }else{
+        return Container(
+          width: width,
+          height: height/4.5,
+          child: const Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.highlightedTheme,
               ),
-              Container(
-                width: width / 2,
-                child: fieldChanged
-                  ? TextFormField(
-                  validator: (value) {
-                    if(value == null || value.trim().isEmpty){
-                      return "Please enter some text";
-                    }
-                    return null;
-                  },
-                  autofocus: true,
-                  obscureText: prefixText == "Password" ? true : false,
-                  controller: controller,
-                  style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w400),
-                  decoration: const InputDecoration(
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    disabledBorder: InputBorder.none,
-                  ),
-                  onFieldSubmitted: (value) {
-                    changeField();
-                  },
-                )
-                : Container(
-                  child: Text(prefixText == "Password" ? "******" : controller.text, style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w400),),
-                ),
-              ),
-            ],
           ),
-          IconButton(
-            onPressed: ()=>{changeField()},
-            icon: fieldChanged ? const Icon(Icons.close) : const Icon(Icons.edit),
-          )
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
+
+  // Widget _field({
+  //   required String prefixText,
+  //   required TextEditingController controller,
+  //   required Function changeField,
+  //   required bool fieldChanged
+  // }) {
+  //   double width = MediaQuery.of(context).size.width;
+  //   double height = MediaQuery.of(context).size.height;
+  //   return Container(
+  //     width: width,
+  //     height: height / 12,
+  //     margin: const EdgeInsets.only(left: 10, right: 10, top: 20),
+  //     padding: const EdgeInsets.symmetric(horizontal: 10),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(20),
+  //     ),
+  //     alignment: Alignment.center,
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Container(
+  //               child: Text('$prefixText : ', style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w500),),
+  //             ),
+  //             Container(
+  //               width: width / 2,
+  //               child: fieldChanged
+  //                 ? TextFormField(
+  //                 validator: (value) {
+  //                   if(value == null || value.trim().isEmpty){
+  //                     return "Please enter some text";
+  //                   }
+  //                   return null;
+  //                 },
+  //                 autofocus: true,
+  //                 obscureText: prefixText == "Password" ? true : false,
+  //                 controller: controller,
+  //                 style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w400),
+  //                 decoration: const InputDecoration(
+  //                   enabledBorder: InputBorder.none,
+  //                   focusedBorder: InputBorder.none,
+  //                   disabledBorder: InputBorder.none,
+  //                 ),
+  //                 onFieldSubmitted: (value) {
+  //                   changeField();
+  //                 },
+  //               )
+  //               : Container(
+  //                 child: Text(prefixText == "Password" ? "******" : controller.text, style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w400),),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         IconButton(
+  //           onPressed: ()=>{changeField()},
+  //           icon: fieldChanged ? const Icon(Icons.close) : const Icon(Icons.edit),
+  //         )
+  //       ],
+  //     ),
+  //   );
+  // }
 
 }
