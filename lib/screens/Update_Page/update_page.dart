@@ -252,7 +252,10 @@ class _UpdatePageState extends State<UpdatePage> {
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
     if(widget.user.imageUrl == ""){
-      return const Image(image: AssetImage('assets/user.webp'),);
+      return const Image(
+        image: AssetImage('assets/user.webp'),
+        height: 200,
+      );
     }else{
       if(_updateImageIsComplete){
         return CircleAvatar(
