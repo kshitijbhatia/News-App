@@ -63,14 +63,12 @@ class _HomePageState extends State<HomePage> {
 
     return WillPopScope(
       onWillPop: () => Future.value(false),
-      child: SafeArea(
-        child: Scaffold(
-          appBar: _appBar(),
-            body:
-            _isComplete
-                ? _articleList()
-                : const LoadingScreen()
-          ),
+      child: Scaffold(
+        appBar: _appBar(),
+          body:
+          _isComplete
+              ? _articleList()
+              : const LoadingScreen()
         ),
     );
   }
@@ -125,6 +123,7 @@ class _HomePageState extends State<HomePage> {
       color: AppTheme.pageBackground,
       child: RefreshIndicator(
         onRefresh: _refreshPage,
+        color: AppTheme.highlightedTheme,
         child: Stack(
           children: [
             ListView.builder(
@@ -136,7 +135,7 @@ class _HomePageState extends State<HomePage> {
                     height: height/16,
                     alignment: Alignment.centerLeft,
                     padding: const EdgeInsets.only(left: 15),
-                    child: const Text("Top Headlines", style: TextStyle(fontFamily: "Poppins", fontWeight: FontWeight.w600, fontSize: 18),),
+                    child: Text("Top Headlines", style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w600),),
                   );
                 }
                 if (index < _articles.length) {
