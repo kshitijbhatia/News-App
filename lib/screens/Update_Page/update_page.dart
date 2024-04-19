@@ -60,7 +60,7 @@ class _UpdatePageState extends State<UpdatePage> {
       if(newName != "" || newEmail != "" || newPassword != ""){
         await UserController.updateDetails(widget.user, newName, newEmail, newPassword);
       }
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),),);
+      Navigator.pop(context, MaterialPageRoute(builder: (context) => const HomePage(),),);
     } on FirebaseAuthException catch(err){
       if(err.code == "requires-recent-login"){
         ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Please Login Again to Update Details"));
@@ -156,19 +156,19 @@ class _UpdatePageState extends State<UpdatePage> {
             child: Stack(
               children: [
                 _userProfilePicture(),
-                // Center(
-                //   child: Container(
-                //     width: width/2,
-                //     height: height/4,
-                //     decoration: BoxDecoration(
-                //       // color: Colors.red,
-                //       borderRadius: BorderRadius.circular(120)
-                //     ),
-                //     alignment: Alignment.bottomRight,
-                //     padding: EdgeInsets.only(bottom: 20),
-                //     child: Icon(Icons.edit),
-                //   ),
-                // ),
+                Center(
+                  child: Container(
+                    width: width/2,
+                    height: height/4,
+                    decoration: BoxDecoration(
+                      // color: Colors.red,
+                      borderRadius: BorderRadius.circular(120)
+                    ),
+                    alignment: Alignment.bottomRight,
+                    padding: const EdgeInsets.only(bottom: 20, right: 20),
+                    child: const Icon(Icons.edit, size: 25,),
+                  ),
+                ),
               ],
             )
           ),

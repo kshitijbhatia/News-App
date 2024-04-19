@@ -35,7 +35,8 @@ class _TextInputState extends State<TextInput> {
       controller: widget.controller,
       validator: (value) {
         if(value == null || value.trim().isEmpty){
-          return 'Please enter some text';
+          if(widget.text == "Email") return "Please enter a valid email";
+          else if(widget.text == "Password") return "Please enter a password";
         }
         return null;
       },
