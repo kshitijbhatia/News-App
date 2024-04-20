@@ -66,7 +66,6 @@ class Authentication{
 
     } catch(error){
       CustomError customError = _handleError(error);
-      log('API_Service : $customError');
       throw(customError);
     }
   }

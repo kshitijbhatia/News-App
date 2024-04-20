@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
@@ -23,6 +23,8 @@ class UserController{
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString(Constants.userKey, jsonEncode(response));
     } on CustomError catch(error){
+      await FirebaseCrashlytics.instance.setUserIdentifier("not-signed-in");
+      await FirebaseCrashlytics.instance.recordFlutterFatalError(FlutterErrorDetails(exception: error));
       rethrow;
     }
   }
@@ -33,6 +35,8 @@ class UserController{
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString(Constants.userKey, jsonEncode(response));
     }on CustomError catch(error){
+      await FirebaseCrashlytics.instance.setUserIdentifier("not-signed-in");
+      await FirebaseCrashlytics.instance.recordFlutterFatalError(FlutterErrorDetails(exception: error));
       rethrow;
     }
   }
@@ -43,6 +47,7 @@ class UserController{
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString("user", "");
     } on CustomError catch(error){
+      await FirebaseCrashlytics.instance.recordFlutterFatalError(FlutterErrorDetails(exception: error));
       rethrow;
     }
   }
@@ -53,6 +58,7 @@ class UserController{
       final prefs = await SharedPreferences.getInstance();
       prefs.setString("user", jsonEncode(response));
     } on CustomError catch(error){
+      await FirebaseCrashlytics.instance.recordFlutterFatalError(FlutterErrorDetails(exception: error));
       rethrow;
     }
   }
@@ -69,6 +75,7 @@ class UserController{
       prefs.setString("user", jsonEncode(response));
       return imageUrl;
     }on CustomError catch(error){
+      await FirebaseCrashlytics.instance.recordFlutterFatalError(FlutterErrorDetails(exception: error));
       rethrow;
     }
   }

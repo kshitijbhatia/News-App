@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
-      FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
+      await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       final response = await ArticleController.getInstance.getArticles();
       setState(() {
         _isComplete = true;
@@ -270,8 +270,8 @@ class _HomePageState extends State<HomePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const Icon(Icons.logout, size: 26,color: Colors.red,),
-                  10.w,
+                  const Icon(Icons.logout, size: 22,color: Colors.red,),
+                  5.w,
                   Text("Log Out", style: AppTheme.getStyle(color: Colors.red, fs: 16, fw: FontWeight.w600),),
                   10.w
                 ],

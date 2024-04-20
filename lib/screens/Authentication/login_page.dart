@@ -20,6 +20,8 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
 
+  bool _loginComplete = true;
+
   late final TextEditingController _emailController;
   late final TextEditingController _passController;
 
@@ -56,6 +58,7 @@ class _LoginPageState extends State<LoginPage> {
     String email = _emailController.text;
     String pass = _passController.text;
     try{
+      setState(() => _loginComplete = false);
       await UserController.signIn(email, pass);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
     } on CustomError catch(error){
@@ -66,6 +69,8 @@ class _LoginPageState extends State<LoginPage> {
       }else if(error.errorType == "snackbar"){
         ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
       }
+    } finally{
+      setState(() => _loginComplete = true);
     }
   }
 
@@ -84,8 +89,13 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               children: [
                 _header(),
-                _loginForm(),
-                _loginSubmit(),
+                _loginComplete
+                    ? Column(
+                  children: [
+                    _loginForm(),
+                    _loginSubmit(),
+                  ],
+                ) : _loginInProgress()
               ],
             ),
           ),
@@ -162,6 +172,7 @@ class _LoginPageState extends State<LoginPage> {
             text: 'Login',
             formKey: _formKey,
             onClick: () async {
+
               _loginUser();
             },
           ),
@@ -193,6 +204,22 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _loginInProgress(){
+    double width = ScreenSize.getWidth(context);
+    double height = ScreenSize.getHeight(context);
+    return Container(
+      color: AppTheme.pageBackground,
+      width: width,
+      height: height/1.2,
+      alignment: Alignment.center,
+      child: Container(
+        width: width/8,
+        height: height/16,
+        child: const CircularProgressIndicator(color: AppTheme.highlightedTheme,),
       ),
     );
   }
