@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/user_controller.dart';
+import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
 import 'package:news_app/network/authentication.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
@@ -52,16 +53,14 @@ class _RegisterPageState extends State<RegisterPage> {
     try{
       await UserController.signUp(name, email, pass);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
-    }on FirebaseAuthException catch(err){
-      if(err.code == "email-already-in-use"){
-        setState(() => _emailError = "Email Already Exists");
-      }else if(err.code == "invalid-email"){
-        setState(() => _emailError = "Please enter a valid email");
-      }else if(err.code == "weak-password"){
-        setState(() => _passError = err.message);
+    } on CustomError catch(error){
+      if(error.errorType == "email"){
+        setState(() => _emailError = error.description);
+      }else if(error.errorType == "password"){
+        setState(() => _passError = error.description);
+      }else if(error.errorType == "snackbar"){
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
       }
-    }catch(err){
-      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,"Error Occurred. Please try again"));
     }
   }
 

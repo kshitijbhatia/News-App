@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 class Constants{
   Constants._();
 
+  static const userKey = "user";
   static const country = "IN";
   static const newsCategory = "business";
   static const apiKey = "fd32f8ae57794159b0719d981ba2988a";

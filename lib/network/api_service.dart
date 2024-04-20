@@ -18,14 +18,11 @@ class ApiService{
         'Accept' : 'application/json'
       },
     ),
-
-  );
+  )..interceptors.add(GetInterceptor());
 
   // Get All Articles
   Future<Map<String, dynamic>> getArticles() async {
     try{
-      _dio.interceptors.add(GetInterceptor());
-
       String method = 'GET';
 
       Map<String, dynamic> queryParams = {
@@ -45,7 +42,7 @@ class ApiService{
 
     }catch(error){
       CustomError customError = _handleError(error);
-      log('Service : ${customError.toString()}');
+      log('API_Service : ${customError.toString()}');
       throw(customError);
     }
   }

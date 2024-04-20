@@ -1,12 +1,9 @@
-import 'dart:developer';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:news_app/controllers/user_controller.dart';
+import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
-import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:news_app/utils/utils.dart';
 import 'package:news_app/widgets/snackbar.dart';
@@ -60,24 +57,15 @@ class _UpdatePageState extends State<UpdatePage> {
       if(newName != "" || newEmail != "" || newPassword != ""){
         await UserController.updateDetails(widget.user, newName, newEmail, newPassword);
       }
-      Navigator.pop(context, MaterialPageRoute(builder: (context) => const HomePage(),),);
-    } on FirebaseAuthException catch(err){
-      if(err.code == "requires-recent-login"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Please Login Again to Update Details"));
-      }else if(err.code == "invalid-email"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Please Enter a valid Email"));
-      }else if(err.code == "email-already-in-use"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Email Already In Use"));
-      }else if(err.code == "weak-password"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Password is too weak"));
-      }else if(err.code == "network-request-failed"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "No Internet Connection"));
-      }else{
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Unknown Error Occurred"));
+      Navigator.pop(context, "Success");
+    } on CustomError catch(error){
+      if(error.errorType == "email"){
+        setState(() => _emailError = error.description);
+      }else if(error.errorType == "password"){
+        setState(() => _passwordError = error.description);
+      }else if(error.errorType == "snackbar"){
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
       }
-    }catch(err){
-      log('UI : $err');
-      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error Occurred while Deleting Account"));
     }
   }
 
@@ -92,9 +80,14 @@ class _UpdatePageState extends State<UpdatePage> {
         widget.user.imageUrl = response;
         _updateImageIsComplete = true;
       });
-    }catch(err){
-      log('Update Image Error : $err');
-      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error occurred"));
+    }on CustomError catch(error){
+      if(error.errorType == "email"){
+        setState(() => _emailError = error.description);
+      }else if(error.errorType == "password"){
+        setState(() => _passwordError = error.description);
+      }else if(error.errorType == "snackbar"){
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
+      }
     }
   }
 
@@ -102,19 +95,14 @@ class _UpdatePageState extends State<UpdatePage> {
     try{
       await UserController.deleteAccount(widget.user);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
-    }on FirebaseAuthException catch(err){
-      if(err.code == "network-request-failed" || err.code == "too-many-requests"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "No Internet Connection"));
-      }else if(err.code == "user-deleted"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Account Already Deleted"));
-      }else if(err.code == "requires-recent-login"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Please Login Again to Delete Account"));
-      }else{
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Unknown Error Occurred"));
+    }on CustomError catch(error){
+      if(error.errorType == "email"){
+        setState(() => _emailError = error.description);
+      }else if(error.errorType == "password"){
+        setState(() => _passwordError = error.description);
+      }else if(error.errorType == "snackbar"){
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
       }
-    } catch(err){
-      log('$err');
-      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error Occurred while Deleting Account"));
     }
   }
 
@@ -135,6 +123,12 @@ class _UpdatePageState extends State<UpdatePage> {
       ),
       backgroundColor: AppTheme.highlightedTheme,
       foregroundColor: Colors.white,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context, "Back");
+        },
+      ),
     );
   }
 
@@ -161,11 +155,10 @@ class _UpdatePageState extends State<UpdatePage> {
                     width: width/2,
                     height: height/4,
                     decoration: BoxDecoration(
-                      // color: Colors.red,
                       borderRadius: BorderRadius.circular(120)
                     ),
                     alignment: Alignment.bottomRight,
-                    padding: const EdgeInsets.only(bottom: 20, right: 20),
+                    padding: const EdgeInsets.only(bottom: 20,right: 10),
                     child: const Icon(Icons.edit, size: 25,),
                   ),
                 ),
@@ -251,10 +244,11 @@ class _UpdatePageState extends State<UpdatePage> {
   Widget _userProfilePicture(){
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
-    if(widget.user.imageUrl == ""){
-      return const Image(
-        image: AssetImage('assets/user.webp'),
-        height: 200,
+    if(widget.user.imageUrl == "" && _updateImageIsComplete){
+      return const CircleAvatar(
+        backgroundColor: Colors.grey,
+        backgroundImage: AssetImage("assets/user.webp"),
+        minRadius: 100,
       );
     }else{
       if(_updateImageIsComplete){

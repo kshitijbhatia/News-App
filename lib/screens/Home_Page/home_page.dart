@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:math' as math;
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
@@ -31,13 +30,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _getArticles() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
+      FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
       final response = await ArticleController.getInstance.getArticles();
       setState(() {
         _isComplete = true;
         _articles = response;
       });
-      final prefs = await SharedPreferences.getInstance();
-      user = AppUser.fromJson(jsonDecode(prefs.getString("user")!));
     } on CustomError catch (error) {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ErrorPage(refreshPage: _refreshPage),));
     }
@@ -89,37 +89,10 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               children: [
                 IconButton(
-                    onPressed: (){setState(() {_showProfile = !_showProfile;});},
+                    // onPressed: () => throw Exception(),
+                    onPressed: (){setState(() => _showProfile = !_showProfile);},
                     icon: _showProfile ? const Icon(Icons.close) : const Icon(Icons.menu),
                 ),
-                // _isComplete ? GestureDetector(
-                //   onTap: (){setState(() => _showProfile = !_showProfile);},
-                //   child: CachedNetworkImage(
-                //     imageUrl: user.imageUrl,
-                //     errorWidget: (context, url, error) {
-                //       return const CircleAvatar(
-                //           radius: 16,
-                //           backgroundImage: AssetImage('assets/user.webp')
-                //         );
-                //     },
-                //     imageBuilder: (context, imageProvider) {
-                //       return CircleAvatar(
-                //         radius: 16,
-                //         backgroundImage: imageProvider,
-                //       );
-                //     },
-                //     placeholder: (context, url) {
-                //       return const CircleAvatar(
-                //         radius: 10,
-                //         backgroundColor: AppTheme.highlightedTheme,
-                //         child: CircularProgressIndicator(
-                //           color: Colors.white,
-                //           strokeWidth: 3,
-                //         ),
-                //       );
-                //     },
-                //   )
-                // ) : 0.h,
                 10.w,
                 const Text(Constants.appName, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 20),),
               ],
@@ -212,14 +185,6 @@ class _HomePageState extends State<HomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.grey,
-
-                )
-              )
-            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -227,13 +192,20 @@ class _HomePageState extends State<HomePage> {
                   width: width/1.8,
                   height: height/12,
                   alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(
+                            color: Colors.grey,
+                          )
+                      )
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: Colors.grey,
-                        backgroundImage: NetworkImage(user.imageUrl),
+                        backgroundImage: _profileSectionPicture()
                       ),
                       20.w,
                       Text(
@@ -250,13 +222,23 @@ class _HomePageState extends State<HomePage> {
                         context,
                         MaterialPageRoute(builder: (context) => UpdatePage(user: user,),)
                     ).then((value){
-                      _refreshPage();
+                      if(value != null){
+                        _refreshPage();
+                      }
                     });
                   },
                   child: Container(
                     width: width/1.8,
                     height: height/12,
                     alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                        border: Border(
+                            bottom: BorderSide(
+                              color: Colors.grey,
+
+                            )
+                        )
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -279,7 +261,7 @@ class _HomePageState extends State<HomePage> {
           GestureDetector(
             onTap: () async {
               final prefs = await SharedPreferences.getInstance();
-              prefs.setString("user", "");
+              prefs.setString(Constants.userKey, "");
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
             },
             child: Container(
@@ -299,5 +281,12 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  _profileSectionPicture(){
+    if(user.imageUrl.isEmpty){
+      return const AssetImage('assets/user.webp');
+    }
+    return NetworkImage(user.imageUrl);
   }
 }

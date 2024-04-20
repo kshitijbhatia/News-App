@@ -1,10 +1,12 @@
 import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/firebase_options.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
+import 'package:news_app/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -14,6 +16,10 @@ void main() async {
   );
   FlutterError.onError = (errorDetails) {
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
   };
   runApp(const MyApp());
 }
@@ -31,9 +37,7 @@ class _MyAppState extends State<MyApp> {
 
   _loadPreferences() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _user = prefs.getString('user') ?? "";
-    });
+    setState(() => _user = prefs.getString(Constants.userKey) ?? "");
     log(_user);
   }
 

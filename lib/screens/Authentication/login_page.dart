@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/user_controller.dart';
+import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/screens/Authentication/register_page.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
@@ -56,24 +57,15 @@ class _LoginPageState extends State<LoginPage> {
     String pass = _passController.text;
     try{
       await UserController.signIn(email, pass);
-      log('Push Replacement being called');
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
-    } on FirebaseAuthException catch(err){
-      log(err.toString());
-      if(err.code == "invalid-email"){
-        setState(() => _emailError = "Please enter a valid email");
-      }else if(err.code == "user-not-found"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Wrong Email Or Password"));
-      }else if(err.code == "wrong-password"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Wrong Password"));
-      }else if(err.code == "network-request-failed"){
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Please check your internet connection"));
-      }else{
-        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Unkown Error. Please try again later"));
+    } on CustomError catch(error){
+      if(error.errorType == "email"){
+        setState(() => _emailError = error.description);
+      }else if(error.errorType == "password"){
+        setState(() => _passError = error.description);
+      }else if(error.errorType == "snackbar"){
+        ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
       }
-    }catch(err){
-      log(err.toString());
-      ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context, "Error Occurred. Please try again"));
     }
   }
 

@@ -39,16 +39,16 @@ class Authentication{
         'imageUrl' : ""
       };
 
-    } on FirebaseAuthException catch(err){
-      rethrow;
-    } catch(err){
-      rethrow;
+    } catch(error){
+      CustomError customError = _handleError(error);
+      throw(customError);
     }
   }
 
   Future<Map<String, dynamic>> signIn(String email, String password) async{
     try{
       final currentUser = await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+      log('In SignIn API_Service : $currentUser');
       final user = await users.doc(currentUser.user!.uid).get();
       if(!user.exists){
         throw Exception("user-not-found");
@@ -61,15 +61,13 @@ class Authentication{
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
         'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
-        'imageUrl' : _firebaseAuth.currentUser!.photoURL
+        'imageUrl' : data["imageUrl"]
       };
 
-    } on FirebaseAuthException catch(err){
-      log('Firebase Exception : $err');
-      rethrow;
-    } catch(err){
-      log('API Service : $err');
-      rethrow;
+    } catch(error){
+      CustomError customError = _handleError(error);
+      log('API_Service : $customError');
+      throw(customError);
     }
   }
 
@@ -84,12 +82,9 @@ class Authentication{
         Reference referenceImageToUpload = referenceDirImages.child('image-${user.uid}');
         await referenceImageToUpload.delete();
       }
-    }  on FirebaseAuthException catch(err){
-      log('$err');
-      rethrow;
-    } catch(err){
-      log('API Service : $err');
-      rethrow;
+    } catch(error){
+      CustomError customError = _handleError(error);
+      throw(customError);
     }
   }
 
@@ -115,10 +110,9 @@ class Authentication{
         'imageUrl' : user.imageUrl
       };
 
-    } on FirebaseAuthException catch(err){
-      rethrow;
-    } catch(err){
-      rethrow;
+    } catch(error){
+      CustomError customError = _handleError(error);
+      throw(customError);
     }
   }
 
@@ -138,9 +132,54 @@ class Authentication{
         'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
         'imageUrl' : imageUrl
       };
-    }catch(err){
-      rethrow;
+    }catch(error){
+      CustomError customError = _handleError(error);
+      throw(customError);
     }
+  }
+
+  CustomError _handleError(dynamic error){
+    CustomError customError = CustomError();
+    customError.message = error.toString();
+    customError.description = "Error Occurred. Please try again";
+    customError.errorType = "snackbar";
+    if(error is FirebaseAuthException){
+      customError.message = error.code;
+      switch(error.code){
+        case "invalid-email":
+          customError.errorType = "email";
+          customError.description = "Please enter a valid email";
+          break;
+        case "user-not-found":
+          customError.description = "Wrong Email Or Password";
+          break;
+        case "wrong-password":
+          customError.description = "Wrong Password";
+          break;
+        case "network-request-failed":
+        case "too-many-requests":
+          customError.description = "Please check your internet connection";
+          break;
+        case "email-already-in-use":
+          customError.errorType = "email";
+          customError.description = "Email Already Exists";
+          break;
+        case "weak-password":
+          customError.errorType = "password";
+          customError.description = error.message!;
+          break;
+        case "requires-recent-login":
+          customError.description = "Please Login Again to Update Details";
+          break;
+        case "user-deleted":
+          customError.description = "Account Already Deleted";
+          break;
+        default:
+          customError.description = "Unknown Error. Please try again later";
+          break;
+      }
+    }
+    return customError;
   }
 }
 

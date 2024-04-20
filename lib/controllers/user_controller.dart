@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
 import 'package:news_app/network/authentication.dart';
+import 'package:news_app/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserController{
@@ -18,14 +20,9 @@ class UserController{
   static signUp(String name, String email, String password) async {
     try{
       final response = await _authService.signUp(name, email, password);
-
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString("user", jsonEncode(response));
-
-    } on FirebaseAuthException catch(err){
-      rethrow;
-    }catch(err){
-      log(err.toString());
+      await prefs.setString(Constants.userKey, jsonEncode(response));
+    } on CustomError catch(error){
       rethrow;
     }
   }
@@ -34,12 +31,8 @@ class UserController{
     try{
       final response = await _authService.signIn(email, password);
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString("user", jsonEncode(response));
-
-    }on FirebaseAuthException catch(err){
-      rethrow;
-    }catch(err){
-      log(err.toString());
+      await prefs.setString(Constants.userKey, jsonEncode(response));
+    }on CustomError catch(error){
       rethrow;
     }
   }
@@ -49,11 +42,7 @@ class UserController{
       await Authentication.getInstance.deleteAccount(user);
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString("user", "");
-    } on FirebaseAuthException catch(err){
-      log('$err');
-      rethrow;
-    } catch(err){
-      log('Controller : $err');
+    } on CustomError catch(error){
       rethrow;
     }
   }
@@ -63,9 +52,7 @@ class UserController{
       final response = await Authentication.getInstance.updateDetails(user, newName, newEmail, newPassword);
       final prefs = await SharedPreferences.getInstance();
       prefs.setString("user", jsonEncode(response));
-    } on FirebaseAuthException catch(err){
-      rethrow;
-    } catch(err){
+    } on CustomError catch(error){
       rethrow;
     }
   }
@@ -81,7 +68,7 @@ class UserController{
       final prefs = await SharedPreferences.getInstance();
       prefs.setString("user", jsonEncode(response));
       return imageUrl;
-    }catch(err){
+    }on CustomError catch(error){
       rethrow;
     }
   }
