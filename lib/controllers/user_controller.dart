@@ -71,8 +71,10 @@ class UserController{
       await referenceImageToUpload.putFile(File(file.path));
       String imageUrl = await referenceImageToUpload.getDownloadURL();
       final response = await Authentication.getInstance.updateImage(user, imageUrl);
+
       final prefs = await SharedPreferences.getInstance();
       prefs.setString("user", jsonEncode(response));
+
       return imageUrl;
     }on CustomError catch(error){
       await FirebaseCrashlytics.instance.recordFlutterFatalError(FlutterErrorDetails(exception: error));

@@ -1,9 +1,9 @@
-import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
+import 'package:news_app/utils/constants.dart';
 
 class Authentication{
   Authentication._privateConstructor();
@@ -17,6 +17,7 @@ class Authentication{
     try{
       await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
       await _firebaseAuth.currentUser!.updateDisplayName(name);
+      await _firebaseAuth.currentUser!.updatePhotoURL(Constants.defaultImageUrl);
 
       Map<String, dynamic> data = {
         'name' : name,
@@ -24,7 +25,7 @@ class Authentication{
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
         'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
-        'imageUrl' : ""
+        'imageUrl' : Constants.defaultImageUrl
       };
 
       await users.doc(_firebaseAuth.currentUser!.uid).set(data);
@@ -36,7 +37,7 @@ class Authentication{
         'password' : password,
         'createdOn' : _firebaseAuth.currentUser!.metadata.creationTime.toString(),
         'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
-        'imageUrl' : ""
+        'imageUrl' : Constants.defaultImageUrl
       };
 
     } catch(error){
@@ -48,7 +49,6 @@ class Authentication{
   Future<Map<String, dynamic>> signIn(String email, String password) async{
     try{
       final currentUser = await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
-      log('In SignIn API_Service : $currentUser');
       final user = await users.doc(currentUser.user!.uid).get();
       if(!user.exists){
         throw Exception("user-not-found");

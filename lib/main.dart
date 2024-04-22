@@ -1,6 +1,8 @@
 import 'dart:developer';
+import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/firebase_options.dart';
@@ -45,6 +47,15 @@ class _MyAppState extends State<MyApp> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() => _user = prefs.getString(Constants.userKey) ?? "");
     log(_user);
+    await _getImageUrl();
+  }
+
+  _getImageUrl() async {
+    Reference referenceRoot = FirebaseStorage.instance.ref();
+    Reference referenceDirImages = referenceRoot.child('images');
+    Reference referenceImageToUpload = referenceDirImages.child('user.webp');
+    String imageUrl = await referenceImageToUpload.getDownloadURL();
+    log(imageUrl);
   }
 
   @override

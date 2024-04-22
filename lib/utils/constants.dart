@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 class Constants{
   Constants._();
 
+  static const defaultImageUrl = "https://firebasestorage.googleapis.com/v0/b/news-app-e526e.appspot.com/o/images%2Fuser.webp?alt=media&token=e614f270-7ca6-4782-8037-c585c2bce7f8";
   static const userKey = "user";
-  static const country = "IN";
   static const newsCategory = "business";
   static const apiKey = "fd32f8ae57794159b0719d981ba2988a";
   static const baseUrl = 'https://newsapi.org';

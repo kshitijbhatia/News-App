@@ -156,8 +156,12 @@ class _UpdatePageState extends State<UpdatePage> {
                       borderRadius: BorderRadius.circular(120)
                     ),
                     alignment: Alignment.bottomRight,
-                    padding: const EdgeInsets.only(bottom: 20,right: 10),
-                    child: const Icon(Icons.edit, size: 25,),
+                    padding: const EdgeInsets.only(bottom: 15,right: 5),
+                    child: const CircleAvatar(
+                      maxRadius: 20,
+                      backgroundColor: Colors.black,
+                      child: Icon(Icons.edit, color: Colors.white,),
+                    ),
                   ),
                 ),
               ],
@@ -242,30 +246,32 @@ class _UpdatePageState extends State<UpdatePage> {
   _userProfilePicture(){
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
-    if(widget.user.imageUrl == "" && _updateImageIsComplete){
-      return const CircleAvatar(
-        backgroundColor: Colors.grey,
-        backgroundImage: AssetImage("assets/user.webp"),
-        minRadius: 100,
-      );
-    }else{
-      if(_updateImageIsComplete){
-        return CircleAvatar(
-          backgroundColor: Colors.grey,
-          backgroundImage: NetworkImage(widget.user.imageUrl),
-          minRadius: 100,
-        );
-      }else{
-        return Container(
-          width: width,
-          height: height/4.5,
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.highlightedTheme,
+
+    if(_updateImageIsComplete) {
+      return Center(
+        child: Container(
+          width: width/2,
+          height: height/4,
+          decoration: BoxDecoration(
+            // border: Border.all(color: Colors.black, width: 2),
+            borderRadius: BorderRadius.circular(100),
+            image: DecorationImage(
+              image: NetworkImage(widget.user.imageUrl),
+              fit: BoxFit.cover,
             ),
           ),
-        );
-      }
+        ),
+      );
+    }else{
+      return Container(
+        width: width,
+        height: height/4.5,
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: AppTheme.highlightedTheme,
+          ),
+        ),
+      );
     }
   }
 }

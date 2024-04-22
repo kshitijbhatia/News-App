@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:math' as math;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
@@ -39,6 +42,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _getArticles() async {
     try {
       // Get the country from Remote Config
+      await FirebaseRemoteConfigService.getInstance.fetchAndActivate();
       country = FirebaseRemoteConfigService.getInstance.getCountry;
 
       // Get the user from Shared Preferences
@@ -76,9 +80,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    double width = ScreenSize.getWidth(context);
-    double height = ScreenSize.getHeight(context);
-
     return WillPopScope(
       onWillPop: () => Future.value(false),
       child: Scaffold(
@@ -104,13 +105,27 @@ class _HomePageState extends State<HomePage> {
           Container(
             child: Row(
               children: [
-                IconButton(
-                    // onPressed: () => throw Exception(),
-                    onPressed: (){setState(() => _showProfile = !_showProfile);},
-                    icon: _showProfile ? const Icon(Icons.close) : const Icon(Icons.menu),
+                GestureDetector(
+                  onTap : () => setState(() => _showProfile = !_showProfile),
+                  child:
+                  _isComplete ? CircleAvatar(
+                    maxRadius: 16,
+                    backgroundColor: Colors.white,
+                    backgroundImage: NetworkImage(user.imageUrl),
+                  ) : Container(
+                    width: width/20,
+                    height: height/38,
+                    child: const CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  ),
                 ),
                 10.w,
-                const Text(Constants.appName, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 20),),
+                Text(
+                  Constants.appName,
+                  style: AppTheme.getStyle(color: Colors.white, fs: 20, fw: FontWeight.w600),
+                ),
               ],
             ),
           ),
@@ -124,7 +139,7 @@ class _HomePageState extends State<HomePage> {
                       child: const Icon(Icons.navigation),
                   ),
                 ),
-                Text(country, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16),)
+                Text(country, style: AppTheme.getStyle(color: Colors.white, fs: 16, fw: FontWeight.bold),)
               ],
             ),
           )
@@ -147,28 +162,31 @@ class _HomePageState extends State<HomePage> {
         color: AppTheme.highlightedTheme,
         child: Stack(
           children: [
-            ListView.builder(
-              itemCount: _articles.length + 1,
-              itemBuilder: (context, index) {
-                if(index == 0){
-                  return Container(
-                    width: width,
-                    height: height/16,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 15),
-                    child: Text("Top Headlines", style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w600),),
-                  );
-                }
-                if (index < _articles.length) {
-                  Article currentArticle = _articles[index - 1];
-                  return ArticleCard(
-                    article: currentArticle,
-                  );
-                }else {
-                  return Container();
-                }
-              },
-          ),
+            GestureDetector(
+              onTap: () => setState(() => _showProfile = false),
+              child: ListView.builder(
+                itemCount: _articles.length + 1,
+                itemBuilder: (context, index) {
+                  if(index == 0){
+                    return Container(
+                      width: width,
+                      height: height/16,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 15),
+                      child: Text("Top Headlines", style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w600),),
+                    );
+                  }
+                  if (index < _articles.length) {
+                    Article currentArticle = _articles[index - 1];
+                    return ArticleCard(
+                      article: currentArticle,
+                    );
+                  }else {
+                    return Container();
+                  }
+                },
+              ),
+            ),
             _showProfile
                 ? _profileSection()
                 : 0.h,
@@ -184,6 +202,7 @@ class _HomePageState extends State<HomePage> {
     return Container(
       width: width/1.5,
       height: height,
+      padding: const EdgeInsets.only(top: 25),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -202,11 +221,14 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+
+
                 Container(
                   width: width/1.8,
-                  height: height/12,
+                  height: height/11,
+                  padding: const EdgeInsets.only(bottom: 10),
                   alignment: Alignment.center,
                   decoration: const BoxDecoration(
                       border: Border(
@@ -216,21 +238,24 @@ class _HomePageState extends State<HomePage> {
                       )
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       CircleAvatar(
-                        radius: 20,
+                        radius: 28,
                         backgroundColor: Colors.grey,
-                        backgroundImage: _profileSectionPicture()
+                        backgroundImage: NetworkImage(user.imageUrl)
                       ),
                       20.w,
                       Text(
                         user.name.toUpperCase(),
-                        style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w500),
+                        style: AppTheme.getStyle(color: Colors.black, fs: 25, fw: FontWeight.w500),
                       ),
                     ],
                   ),
                 ),
+
+
+
                 GestureDetector(
                   onTap: (){
                     setState(() => _showProfile = false);
@@ -247,16 +272,8 @@ class _HomePageState extends State<HomePage> {
                     width: width/1.8,
                     height: height/12,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                        border: Border(
-                            bottom: BorderSide(
-                              color: Colors.grey,
-
-                            )
-                        )
-                    ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         const Icon(
                             Icons.settings,
@@ -297,12 +314,5 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  _profileSectionPicture(){
-    if(user.imageUrl.isEmpty){
-      return const AssetImage('assets/user.webp');
-    }
-    return NetworkImage(user.imageUrl);
   }
 }
