@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 
 class ErrorPage extends StatefulWidget{
@@ -21,15 +22,25 @@ class _ErrorPageState extends State<ErrorPage> {
       onWillPop: (){
         return Future.value(false);
       },
-      child: SafeArea(
-        child: Scaffold(
-          body: Container(
-            width: width,
-            height: height,
-            child: _errorMessage(),
-          ),
+      child: Scaffold(
+        appBar: _appBar(),
+        body: Container(
+          width: width,
+          height: height,
+          color: AppTheme.pageBackground,
+          child: _errorMessage(),
         ),
       ),
+    );
+  }
+
+  _appBar(){
+    return AppBar(
+      title: Container(
+        child: const Text(Constants.appName, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, fontSize: 20),),
+      ),
+      backgroundColor: AppTheme.highlightedTheme,
+      foregroundColor: Colors.white,
     );
   }
 
@@ -52,7 +63,7 @@ class _ErrorPageState extends State<ErrorPage> {
                       padding: MaterialStatePropertyAll(EdgeInsets.symmetric(vertical: 10, horizontal: 30))
                   ),
                   onPressed: (){
-                    widget.refreshPage();
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
                   },
                   child: const Text('Retry', textAlign: TextAlign.center,style: TextStyle(color: Colors.white,fontSize: 18),)
               )

@@ -21,13 +21,13 @@ class ApiService{
   )..interceptors.add(GetInterceptor());
 
   // Get All Articles
-  Future<Map<String, dynamic>> getArticles() async {
+  Future<Map<String, dynamic>> getArticles(String country) async {
     try{
       String method = 'GET';
 
       Map<String, dynamic> queryParams = {
         'apiKey' : Constants.apiKey,
-        'country' : Constants.country,
+        'country' : country,
         'category' : Constants.newsCategory
       };
 

@@ -1,3 +1,5 @@
+import 'dart:developer';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:news_app/controllers/user_controller.dart';
@@ -24,10 +26,6 @@ class _UpdatePageState extends State<UpdatePage> {
   bool _updateImageIsComplete = true;
 
   final _formKey = GlobalKey<FormState>();
-
-  // bool _nameChanged = false;
-  // bool _emailChanged = false;
-  // bool _passwordChanged = false;
 
   String? _nameError;
   String? _emailError;
@@ -236,12 +234,12 @@ class _UpdatePageState extends State<UpdatePage> {
             ],
           )
         ],
-                ),
+        ),
       ),
     );
   }
 
-  Widget _userProfilePicture(){
+  _userProfilePicture(){
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
     if(widget.user.imageUrl == "" && _updateImageIsComplete){
@@ -262,77 +260,12 @@ class _UpdatePageState extends State<UpdatePage> {
           width: width,
           height: height/4.5,
           child: const Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.highlightedTheme,
-              ),
+            child: CircularProgressIndicator(
+              color: AppTheme.highlightedTheme,
+            ),
           ),
         );
       }
     }
   }
-
-  // Widget _field({
-  //   required String prefixText,
-  //   required TextEditingController controller,
-  //   required Function changeField,
-  //   required bool fieldChanged
-  // }) {
-  //   double width = MediaQuery.of(context).size.width;
-  //   double height = MediaQuery.of(context).size.height;
-  //   return Container(
-  //     width: width,
-  //     height: height / 12,
-  //     margin: const EdgeInsets.only(left: 10, right: 10, top: 20),
-  //     padding: const EdgeInsets.symmetric(horizontal: 10),
-  //     decoration: BoxDecoration(
-  //       color: Colors.white,
-  //       borderRadius: BorderRadius.circular(20),
-  //     ),
-  //     alignment: Alignment.center,
-  //     child: Row(
-  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //       children: [
-  //         Row(
-  //           children: [
-  //             Container(
-  //               child: Text('$prefixText : ', style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w500),),
-  //             ),
-  //             Container(
-  //               width: width / 2,
-  //               child: fieldChanged
-  //                 ? TextFormField(
-  //                 validator: (value) {
-  //                   if(value == null || value.trim().isEmpty){
-  //                     return "Please enter some text";
-  //                   }
-  //                   return null;
-  //                 },
-  //                 autofocus: true,
-  //                 obscureText: prefixText == "Password" ? true : false,
-  //                 controller: controller,
-  //                 style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w400),
-  //                 decoration: const InputDecoration(
-  //                   enabledBorder: InputBorder.none,
-  //                   focusedBorder: InputBorder.none,
-  //                   disabledBorder: InputBorder.none,
-  //                 ),
-  //                 onFieldSubmitted: (value) {
-  //                   changeField();
-  //                 },
-  //               )
-  //               : Container(
-  //                 child: Text(prefixText == "Password" ? "******" : controller.text, style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w400),),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //         IconButton(
-  //           onPressed: ()=>{changeField()},
-  //           icon: fieldChanged ? const Icon(Icons.close) : const Icon(Icons.edit),
-  //         )
-  //       ],
-  //     ),
-  //   );
-  // }
-
 }

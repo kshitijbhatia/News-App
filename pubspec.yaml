@@ -49,6 +49,7 @@ dependencies:
   firebase_analytics: ^10.10.1
   image_picker: ^1.0.6
   firebase_storage: ^11.7.2
+  firebase_remote_config: ^4.4.2
 
 dev_dependencies:
   flutter_test:

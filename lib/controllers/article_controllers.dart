@@ -12,9 +12,9 @@ class ArticleController{
 
   final ApiService _api = ApiService.getInstance;
 
-  Future<List<Article>> getArticles() async{
+  Future<List<Article>> getArticles(String country) async{
     try{
-      final response = await _api.getArticles();
+      final response = await _api.getArticles(country);
       final List<Map<String, dynamic>> resListJson = List<Map<String, dynamic>>.from(response["articles"]);
       List<Article> articles = resListJson.map((json) {
         return Article.fromJson(json);

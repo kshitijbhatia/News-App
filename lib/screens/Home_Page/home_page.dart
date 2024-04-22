@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:math' as math;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
+import 'package:news_app/network/remote_config_service.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
 import 'package:news_app/screens/Error_Page/error_page.dart';
 import 'package:news_app/screens/Update_Page/update_page.dart';
@@ -23,17 +26,31 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
   bool _isComplete = false;
+
   bool _showProfile = false;
+
   late AppUser user;
   List<Article> _articles = [];
 
+  String country = "";
+
   Future<void> _getArticles() async {
     try {
+      // Get the country from Remote Config
+      country = FirebaseRemoteConfigService.getInstance.getCountry;
+
+      // Get the user from Shared Preferences
       final prefs = await SharedPreferences.getInstance();
       user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
+
+      // Set the user uid in crashlytics
       await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
-      final response = await ArticleController.getInstance.getArticles();
+
+      // Get Articles
+      final response = await ArticleController.getInstance.getArticles(country);
+
       setState(() {
         _isComplete = true;
         _articles = response;
@@ -49,7 +66,6 @@ class _HomePageState extends State<HomePage> {
       _articles.clear();
     });
     await _getArticles();
-    return Future.value();
   }
 
   @override
@@ -108,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                       child: const Icon(Icons.navigation),
                   ),
                 ),
-                const Text(Constants.country, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16),)
+                Text(country, style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.bold, fontSize: 16),)
               ],
             ),
           )
