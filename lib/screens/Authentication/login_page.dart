@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -60,6 +61,12 @@ class _LoginPageState extends State<LoginPage> {
     try{
       setState(() => _loginComplete = false);
       await UserController.signIn(email, pass);
+      final analytics = FirebaseAnalytics.instance;
+      analytics.logLogin(
+        parameters: {
+          "email" : email,
+        }
+      );
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
     } on CustomError catch(error){
       if(error.errorType == "email"){
@@ -172,7 +179,6 @@ class _LoginPageState extends State<LoginPage> {
             text: 'Login',
             formKey: _formKey,
             onClick: () async {
-
               _loginUser();
             },
           ),

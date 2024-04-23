@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:math' as math;
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
@@ -51,6 +47,8 @@ class _HomePageState extends State<HomePage> {
 
       // Set the user uid in crashlytics
       await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
+
+      FirebaseAnalytics.instance.setUserId(id : user.uid);
 
       // Get Articles
       final response = await ArticleController.getInstance.getArticles(country);
@@ -202,7 +200,8 @@ class _HomePageState extends State<HomePage> {
     return Container(
       width: width/1.5,
       height: height,
-      padding: const EdgeInsets.only(top: 25),
+      padding: const EdgeInsets.only(top: 15),
+      margin: const EdgeInsets.only(top: 10),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -223,8 +222,6 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-
-
                 Container(
                   width: width/1.8,
                   height: height/11,

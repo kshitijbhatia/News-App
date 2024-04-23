@@ -72,6 +72,7 @@ class Authentication{
 
   Future<void> deleteAccount(AppUser user) async {
     try{
+      await _firebaseAuth.signInWithEmailAndPassword(email: user.email, password: user.password);
       await _firebaseAuth.currentUser!.delete();
       await users.doc(user.uid).delete();
 

@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -14,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform
   );
@@ -25,7 +25,7 @@ void main() async {
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    FirebaseCrashlytics.instance.recordFlutterFatalError(FlutterErrorDetails(exception: error));
     return true;
   };
 
@@ -47,15 +47,6 @@ class _MyAppState extends State<MyApp> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() => _user = prefs.getString(Constants.userKey) ?? "");
     log(_user);
-    await _getImageUrl();
-  }
-
-  _getImageUrl() async {
-    Reference referenceRoot = FirebaseStorage.instance.ref();
-    Reference referenceDirImages = referenceRoot.child('images');
-    Reference referenceImageToUpload = referenceDirImages.child('user.webp');
-    String imageUrl = await referenceImageToUpload.getDownloadURL();
-    log(imageUrl);
   }
 
   @override
