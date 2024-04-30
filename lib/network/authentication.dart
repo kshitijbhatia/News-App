@@ -76,7 +76,7 @@ class Authentication{
       await _firebaseAuth.currentUser!.delete();
       await users.doc(user.uid).delete();
 
-      if(user.imageUrl != ""){
+      if(user.imageUrl != Constants.defaultImageUrl){
         Reference referenceRoot = FirebaseStorage.instance.ref();
         Reference referenceDirImages = referenceRoot.child('images');
         Reference referenceImageToUpload = referenceDirImages.child('image-${user.uid}');

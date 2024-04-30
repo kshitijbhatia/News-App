@@ -8,14 +8,12 @@ class TextInput extends StatefulWidget {
     required this.controller,
     required this.removeError,
     required this.error,
-    required this.focusNode
   });
 
   final String text;
   final TextEditingController controller;
   final String? error;
   final Function removeError;
-  final FocusNode focusNode;
 
   @override
   State<TextInput> createState() => _TextInputState();
@@ -30,7 +28,6 @@ class _TextInputState extends State<TextInput> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      focusNode: widget.focusNode,
       autovalidateMode: widget.controller.text.isEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
       controller: widget.controller,
       validator: (value) {
