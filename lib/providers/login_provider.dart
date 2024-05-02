@@ -1,8 +1,8 @@
 import 'dart:developer';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/user_controller.dart';
+import 'package:news_app/main.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/screens/Authentication/register_page.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
@@ -66,11 +66,6 @@ class LoginProvider extends ChangeNotifier{
 
   navigateToRegisterPage(BuildContext context){
     clearForm();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RegisterPage(),
-      ),
-    );
+    navigatorKey.currentState?.pushNamed('/register');
   }
 }
