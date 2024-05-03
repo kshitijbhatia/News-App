@@ -26,7 +26,7 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform
   );
 
-  await FirebaseApi().initNotifications();
+  await FirebaseMessagingApi().initNotifications();
 
   await FirebaseRemoteConfigService.getInstance.initialize();
 
