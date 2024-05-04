@@ -250,9 +250,7 @@ class _HomePageState extends State<HomePage> {
           ),
           GestureDetector(
             onTap: () async {
-              final prefs = await SharedPreferences.getInstance();
-              prefs.setString(Constants.userKey, "");
-              provider.setShowProfileFalse();
+              provider.removeUser();
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
             },
             child: Container(

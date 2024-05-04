@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
@@ -12,6 +15,7 @@ class Authentication{
 
   static final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final CollectionReference users = FirebaseFirestore.instance.collection('users');
+  final CollectionReference activeUsers = FirebaseFirestore.instance.collection('active_users');
 
   Future<Map<String, dynamic>> signUp(String name,String email,String password) async {
     try{
@@ -29,6 +33,9 @@ class Authentication{
       };
 
       await users.doc(_firebaseAuth.currentUser!.uid).set(data);
+
+      final fCMToken = await FirebaseMessaging.instance.getToken();
+      await activeUsers.doc(fCMToken).set({'uid' : _firebaseAuth.currentUser!.uid.toString()});
 
       return {
         'uid' : _firebaseAuth.currentUser!.uid.toString(),
@@ -54,6 +61,10 @@ class Authentication{
         throw Exception("user-not-found");
       }
       final Map<String, dynamic> data = user.data() as Map<String, dynamic>;
+
+      final fCMToken = await FirebaseMessaging.instance.getToken();
+      await activeUsers.doc(fCMToken).set({'uid' : _firebaseAuth.currentUser!.uid.toString()});
+
       return {
         'uid' : _firebaseAuth.currentUser!.uid,
         'name' : data["name"],
@@ -132,6 +143,16 @@ class Authentication{
         'lastSignIn' : _firebaseAuth.currentUser!.metadata.lastSignInTime.toString(),
         'imageUrl' : imageUrl
       };
+    }catch(error){
+      CustomError customError = _handleError(error);
+      throw(customError);
+    }
+  }
+
+  Future<void> signOut(AppUser user) async {
+    try{
+      final fCMToken = await FirebaseMessaging.instance.getToken();
+      await activeUsers.doc(fCMToken).delete();
     }catch(error){
       CustomError customError = _handleError(error);
       throw(customError);

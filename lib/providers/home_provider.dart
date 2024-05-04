@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/article_controllers.dart';
+import 'package:news_app/main.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
+import 'package:news_app/network/authentication.dart';
 import 'package:news_app/network/remote_config_service.dart';
 import 'package:news_app/screens/Error_Page/error_page.dart';
 import 'package:news_app/utils/constants.dart';
@@ -36,6 +38,12 @@ class HomeProvider extends ChangeNotifier{
     final prefs = await SharedPreferences.getInstance();
     _user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
     notifyListeners();
+  }
+  removeUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString(Constants.userKey, "");
+    _showProfile = false;
+    await Authentication.getInstance.signOut(_user);
   }
 
   String _country = "";
