@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="SpaceNews"
+        android:label="MyNews"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

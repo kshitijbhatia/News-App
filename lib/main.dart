@@ -1,10 +1,10 @@
 import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/firebase_options.dart';
+import 'package:news_app/network/messaging_service.dart';
 import 'package:news_app/network/remote_config_service.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
@@ -17,6 +17,9 @@ void main() async {
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform
   );
+
+  await FirebaseMessagingApi.getInstance.initNotifications();
+  await FirebaseMessagingApi.getInstance.subscribeToTopic("all_users");
 
   await FirebaseRemoteConfigService.getInstance.initialize();
 

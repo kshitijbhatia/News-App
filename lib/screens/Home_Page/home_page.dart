@@ -8,6 +8,8 @@ import 'package:news_app/controllers/article_controllers.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
+import 'package:news_app/network/authentication.dart';
+import 'package:news_app/network/messaging_service.dart';
 import 'package:news_app/network/remote_config_service.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
 import 'package:news_app/screens/Error_Page/error_page.dart';
@@ -27,12 +29,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   bool _isComplete = false;
-
   bool _showProfile = false;
-
   late AppUser user;
   List<Article> _articles = [];
-
   String country = "";
 
   Future<void> _getArticles() async {
@@ -70,10 +69,26 @@ class _HomePageState extends State<HomePage> {
     await _getArticles();
   }
 
+  Future<void> initializeNotification() async {
+    final prefs = await SharedPreferences.getInstance();
+    final _user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
+    await FirebaseMessagingApi.getInstance.initNotifications();
+    await FirebaseMessagingApi.getInstance.subscribeToTopic(_user.uid);
+    await FirebaseMessagingApi.getInstance.subscribeToTopic("all_users");
+  }
+
   @override
   void initState() {
     super.initState();
     _getArticles();
+    initializeNotification();
+  }
+
+  @override
+  void dispose() {
+    FirebaseMessagingApi.getInstance.unsubscribeFromTopic(user.uid);
+    FirebaseMessagingApi.getInstance.unsubscribeFromTopic("all_signed_in_users");
+    super.dispose();
   }
 
   @override
@@ -292,6 +307,7 @@ class _HomePageState extends State<HomePage> {
             onTap: () async {
               final prefs = await SharedPreferences.getInstance();
               prefs.setString(Constants.userKey, "");
+              Authentication.getInstance.signOut(user);
               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
             },
             child: Container(
