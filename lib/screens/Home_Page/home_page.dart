@@ -74,7 +74,7 @@ class _HomePageState extends State<HomePage> {
     final _user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
     await FirebaseMessagingApi.getInstance.initNotifications();
     await FirebaseMessagingApi.getInstance.subscribeToTopic(_user.uid);
-    await FirebaseMessagingApi.getInstance.subscribeToTopic("all_users");
+    await FirebaseMessagingApi.getInstance.subscribeToTopic(Constants.allSignedInUsers);
   }
 
   @override
@@ -87,7 +87,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     FirebaseMessagingApi.getInstance.unsubscribeFromTopic(user.uid);
-    FirebaseMessagingApi.getInstance.unsubscribeFromTopic("all_signed_in_users");
+    FirebaseMessagingApi.getInstance.unsubscribeFromTopic(Constants.allSignedInUsers);
     super.dispose();
   }
 

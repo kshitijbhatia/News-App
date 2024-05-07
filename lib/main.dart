@@ -19,7 +19,7 @@ void main() async {
   );
 
   await FirebaseMessagingApi.getInstance.initNotifications();
-  await FirebaseMessagingApi.getInstance.subscribeToTopic("all_users");
+  await FirebaseMessagingApi.getInstance.subscribeToTopic(Constants.allUsers);
 
   await FirebaseRemoteConfigService.getInstance.initialize();
 

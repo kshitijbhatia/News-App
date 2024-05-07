@@ -55,7 +55,7 @@ class FirebaseMessagingApi{
     );
 
     // For Background and Terminated notifications
-    await _firebaseMessaging.getInitialMessage();
+    final RemoteMessage? backgroundMessage = await _firebaseMessaging.getInitialMessage();
     FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
   }
 

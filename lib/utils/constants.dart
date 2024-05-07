@@ -10,6 +10,8 @@ class Constants{
   static const baseUrl = 'https://newsapi.org';
   static const getArticlesEndpoint = '/v2/top-headlines';
   static const String appName = "MyNews";
+  static const String allUsers = "all_users";
+  static const String allSignedInUsers = "all_signed_in_users";
 }
 
 class AppTheme{
