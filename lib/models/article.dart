@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 class Article{
@@ -48,3 +49,15 @@ class Article{
    };
   }
 }
+
+class ArticleNotifier extends StateNotifier<List<Article>>{
+  ArticleNotifier() : super([]);
+
+  setArticleList(List<Article> list){
+    state = list;
+  }
+}
+
+final articleListNotifierProvider = StateNotifierProvider<ArticleNotifier, List<Article>>((ref) {
+  return ArticleNotifier();
+},);

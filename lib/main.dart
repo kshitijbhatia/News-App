@@ -1,18 +1,28 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/firebase_options.dart';
+import 'package:news_app/models/user.dart';
 import 'package:news_app/network/messaging_service.dart';
 import 'package:news_app/network/remote_config_service.dart';
+import 'package:news_app/riverpod_observer.dart';
 import 'package:news_app/screens/Authentication/login_page.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError();
+},);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final sharedPreferences = await SharedPreferences.getInstance();
 
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform
@@ -32,24 +42,36 @@ void main() async {
     return true;
   };
 
-  runApp(const MyApp());
+  runApp(
+      ProviderScope(
+          overrides: [sharedPreferencesProvider.overrideWithValue(sharedPreferences)],
+          observers: [Logger()],
+          child: const MyApp()
+      ),
+  );
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> {
 
-  String _user = "";
+  late String _user;
 
   _loadPreferences() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() => _user = prefs.getString(Constants.userKey) ?? "");
-    log(_user);
+    final SharedPreferences prefs = ref.read(sharedPreferencesProvider);
+    _user = prefs.getString(Constants.userKey) ?? "";
+    log('Current User : $_user');
+    if(_user.isNotEmpty){
+      Future.delayed(Duration.zero, () {
+        final currentUser = AppUser.fromJson(jsonDecode(_user));
+        ref.read(currentUserNotifierProvider.notifier).setUser(currentUser: currentUser);
+      },);
+    }
   }
 
   @override

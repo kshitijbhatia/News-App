@@ -3,9 +3,7 @@ import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 
 class ErrorPage extends StatefulWidget{
-  const ErrorPage({super.key, required this.refreshPage});
-
-  final Function refreshPage;
+  const ErrorPage({super.key});
 
   @override
   State<ErrorPage> createState() => _ErrorPageState();

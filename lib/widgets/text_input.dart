@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:news_app/utils/constants.dart';
 
-class TextInput extends StatefulWidget {
+final showPasswordProvider = StateProvider<bool>((ref) {
+  return false;
+},);
+
+class TextInput extends ConsumerStatefulWidget {
   const TextInput({
     super.key,
     required this.text,
@@ -18,37 +23,28 @@ class TextInput extends StatefulWidget {
   final FocusNode focusNode;
 
   @override
-  State<TextInput> createState() => _TextInputState();
+  ConsumerState<TextInput> createState() => _TextInputState();
 }
 
-class _TextInputState extends State<TextInput> {
-
-  bool _showPassword = false;
-
-  void _changePasswordVisibility() => setState(() => _showPassword = !_showPassword);
+class _TextInputState extends ConsumerState<TextInput> {
 
   @override
   Widget build(BuildContext context) {
+    bool showPassword = ref.watch(showPasswordProvider);
     return TextFormField(
       focusNode: widget.focusNode,
       autovalidateMode: widget.controller.text.isEmpty ? AutovalidateMode.disabled : AutovalidateMode.onUserInteraction,
       controller: widget.controller,
-      validator: (value) {
-        if(value == null || value.trim().isEmpty){
-          if(widget.text == "Email") return "Please enter a valid email";
-          else if(widget.text == "Password") return "Please enter a password";
-          else if(widget.text == "Name") return "Please enter a valid name";
-        }
-        return null;
-      },
       onTapOutside: (event) {
         FocusScopeNode focusNode = FocusScope.of(context);
         if (!focusNode.hasPrimaryFocus) {
           focusNode.unfocus();
         }
       },
-      obscureText: widget.text == "Password" && !_showPassword ? true : false,
-      onChanged: (value) => widget.removeError(),
+      obscureText: widget.text == "Password" && !showPassword ? true : false,
+      onChanged: (value){
+        if(widget.error != null)widget.removeError();
+      },
       style : AppTheme.getStyle(
           color: Colors.black,
           fs: 16,
@@ -88,8 +84,8 @@ class _TextInputState extends State<TextInput> {
         ),
         suffixIcon: widget.text == "Password"
             ? IconButton(
-              onPressed: _changePasswordVisibility,
-              icon: _showPassword
+              onPressed: () => ref.read(showPasswordProvider.notifier).state = !showPassword,
+              icon: showPassword
                   ? const Icon(Icons.visibility, size: 20,)
                   : const Icon(Icons.visibility_off, size: 20,),)
             : (widget.controller.text.isNotEmpty

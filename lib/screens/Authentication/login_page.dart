@@ -1,36 +1,36 @@
-import 'dart:developer';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/user_controller.dart';
 import 'package:news_app/models/custom_error.dart';
+import 'package:news_app/models/form_data.dart';
 import 'package:news_app/screens/Authentication/register_page.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:news_app/widgets/snackbar.dart';
 import 'package:news_app/widgets/submit_button.dart';
 import 'package:news_app/widgets/text_input.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoginPage extends StatefulWidget {
+enum LoginState { initial, loading }
+
+final loginStateProvider = StateProvider<LoginState>((ref) {
+  return LoginState.initial;
+},);
+
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-
-  bool _loginComplete = true;
+class _LoginPageState extends ConsumerState<LoginPage> {
 
   late final TextEditingController _emailController;
   late final TextEditingController _passController;
 
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _passwordFocus = FocusNode();
-
-  String? _emailError;
-  String? _passError;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -42,42 +42,29 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _navigateToRegisterPage(){
-    setState(() {
-      _formKey.currentState?.reset();
-      _emailController.clear();
-      _passController.clear();
-    });
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const RegisterPage(),
-      ),
-    );
+    ref.read(emailFieldNotifierProvider.notifier).updateError(null);
+    ref.read(passwordFieldNotifierProvider.notifier).updateError(null);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterPage(),),);
   }
 
   _loginUser() async {
     String email = _emailController.text;
-    String pass = _passController.text;
+    String password = _passController.text;
     try{
-      setState(() => _loginComplete = false);
-      await UserController.signIn(email, pass);
-      final analytics = FirebaseAnalytics.instance;
-      analytics.logLogin(
-        parameters: {
-          "email" : email,
-        }
-      );
+      ref.read(loginStateProvider.notifier).state = LoginState.loading;
+      final userController = ref.read(userControllerProvider);
+      await userController.signIn(email, password);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
     } on CustomError catch(error){
       if(error.errorType == "email"){
-        setState(() => _emailError = error.description);
+        ref.read(emailFieldNotifierProvider.notifier).updateError(error.description);
       }else if(error.errorType == "password"){
-        setState(() => _passError = error.description);
+        ref.read(passwordFieldNotifierProvider.notifier).updateError(error.description);
       }else if(error.errorType == "snackbar"){
         ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
       }
     } finally{
-      setState(() => _loginComplete = true);
+      ref.read(loginStateProvider.notifier).state = LoginState.initial;
     }
   }
 
@@ -93,18 +80,20 @@ class _LoginPageState extends State<LoginPage> {
             width: width,
             height: height,
             color: AppTheme.pageBackground,
-            child: Column(
-              children: [
-                _header(),
-                _loginComplete
-                    ? Column(
-                  children: [
-                    _loginForm(),
-                    _loginSubmit(),
-                  ],
-                ) : _loginInProgress()
-              ],
-            ),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final loginState = ref.watch(loginStateProvider);
+                if(loginState == LoginState.initial){
+                  return Column(
+                    children: [_header(), _loginForm(), _loginSubmit()],
+                  );
+                }else{
+                  return Column(
+                    children: [_header(), _loginInProgress()],
+                  );
+                }
+              },
+            )
           ),
         ),
       ),
@@ -135,6 +124,8 @@ class _LoginPageState extends State<LoginPage> {
   Widget _loginForm() {
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
+    final emailField = ref.watch(emailFieldNotifierProvider);
+    final passwordField = ref.watch(passwordFieldNotifierProvider);
     return Form(
       key: _formKey,
       child: Container(
@@ -147,16 +138,16 @@ class _LoginPageState extends State<LoginPage> {
             TextInput(
               text: 'Email',
               controller: _emailController,
-              error: _emailError,
-              removeError: () => setState(() => _emailError = null),
+              error: emailField.error,
+              removeError: () => ref.read(emailFieldNotifierProvider.notifier).updateError(null),
               focusNode: _emailFocus,
             ),
             20.h,
             TextInput(
               text: 'Password',
               controller: _passController,
-              error: _passError,
-              removeError: () => setState(() => _passError = null),
+              error: passwordField.error,
+              removeError: () => ref.read(passwordFieldNotifierProvider.notifier).updateError(null),
               focusNode: _passwordFocus,
             )
           ],
@@ -179,7 +170,9 @@ class _LoginPageState extends State<LoginPage> {
             text: 'Login',
             formKey: _formKey,
             onClick: () async {
-              _loginUser();
+              final emailError = ref.read(emailFieldNotifierProvider.notifier).validate(_emailController.text);
+              final passwordError = ref.read(passwordFieldNotifierProvider.notifier).validate(_passController.text);
+              if(!emailError || !passwordError){_loginUser();}
             },
           ),
           10.h,
