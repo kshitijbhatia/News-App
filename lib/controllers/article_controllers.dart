@@ -1,15 +1,15 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/network/api_service.dart';
 
+final articleControllerProvider = Provider((ref) {
+  return ArticleController();
+},);
+
 class ArticleController{
-
-  ArticleController._();
-  static final ArticleController _instance = ArticleController._();
-  static ArticleController get getInstance => _instance;
-
   final ApiService _api = ApiService.getInstance;
 
   Future<List<Article>> getArticles(String country) async{

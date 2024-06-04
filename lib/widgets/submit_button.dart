@@ -11,11 +11,7 @@ class SubmitButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
-        onPressed: () {
-          if(formKey.currentState!.validate()){
-            onClick();
-          }
-        },
+        onPressed: () => onClick(),
         style: ButtonStyle(
           padding: const MaterialStatePropertyAll(
             EdgeInsets.symmetric(horizontal: 100, vertical: 12),

@@ -1,26 +1,30 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/user_controller.dart';
 import 'package:news_app/models/custom_error.dart';
-import 'package:news_app/models/user.dart';
-import 'package:news_app/network/authentication.dart';
+import 'package:news_app/models/form_data.dart';
+import 'package:news_app/screens/Authentication/login_page.dart';
 import 'package:news_app/screens/Home_Page/home_page.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:news_app/widgets/snackbar.dart';
 import 'package:news_app/widgets/submit_button.dart';
 import 'package:news_app/widgets/text_input.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class RegisterPage extends StatefulWidget{
+enum RegisterState { initial, loading }
+
+final registerStateProvider = StateProvider<RegisterState>((ref) {
+  return RegisterState.initial;
+},);
+
+class RegisterPage extends ConsumerStatefulWidget{
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-
-  bool _registrationComplete = true;
+class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   late final TextEditingController _nameController;
   late final TextEditingController _emailController;
@@ -29,10 +33,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final FocusNode _nameFocus = FocusNode();
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _passwordFocus = FocusNode();
-
-  String? _nameError;
-  String? _emailError;
-  String? _passError;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -45,7 +45,10 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   _navigateToLoginPage(){
-    Navigator.pop(context);
+    ref.read(emailFieldNotifierProvider.notifier).updateError(null);
+    ref.read(passwordFieldNotifierProvider.notifier).updateError(null);
+    ref.read(nameFieldNotifierProvider.notifier).updateError(null);
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage(),));
   }
 
   _registerUser() async {
@@ -53,19 +56,20 @@ class _RegisterPageState extends State<RegisterPage> {
     String email = _emailController.text;
     String pass = _passController.text;
     try{
-      setState(() => _registrationComplete = false);
-      await UserController.signUp(name, email, pass);
+      ref.read(registerStateProvider.notifier).state = RegisterState.loading;
+      final userController = ref.read(userControllerProvider);
+      await userController.signUp(name, email, pass);
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage(),));
     } on CustomError catch(error){
       if(error.errorType == "email"){
-        setState(() => _emailError = error.description);
+        ref.read(emailFieldNotifierProvider.notifier).updateError(error.description);
       }else if(error.errorType == "password"){
-        setState(() => _passError = error.description);
+        ref.read(passwordFieldNotifierProvider.notifier).updateError(error.description);
       }else if(error.errorType == "snackbar"){
         ScaffoldMessenger.of(context).showSnackBar(getCustomSnackBar(context ,error.description));
       }
     } finally{
-      setState(() => _registrationComplete = true);
+      ref.read(registerStateProvider.notifier).state = RegisterState.initial;
     }
   }
 
@@ -81,18 +85,20 @@ class _RegisterPageState extends State<RegisterPage> {
             width: width,
             height: height,
             color: AppTheme.pageBackground,
-            child: Column(
-              children: [
-                _header(),
-                _registrationComplete
-                    ? Column(
-                  children: [
-                    _registerForm(),
-                    _registerSubmit(),
-                  ],
-                ) : _registerInProgress()
-              ],
-            ),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final registerState = ref.watch(registerStateProvider);
+                if(registerState == RegisterState.initial){
+                  return Column(
+                    children: [_header(), _registerForm(), _registerSubmit()],
+                  );
+                }else{
+                  return Column(
+                    children: [_header(), _registerInProgress()],
+                  );
+                }
+              },
+            )
           ),
         ),
       ),
@@ -123,6 +129,11 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _registerForm(){
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
+    
+    final nameField = ref.watch(nameFieldNotifierProvider);
+    final emailField = ref.watch(emailFieldNotifierProvider);
+    final passwordField = ref.watch(passwordFieldNotifierProvider);
+    
     return Form(
       key: _formKey,
       child: Container(
@@ -135,24 +146,24 @@ class _RegisterPageState extends State<RegisterPage> {
             TextInput(
               text: 'Name',
               controller: _nameController,
-              error: _nameError,
-              removeError: () => setState(() => _nameError = null),
+              error: nameField.error,
+              removeError: () => ref.read(nameFieldNotifierProvider.notifier).updateError(null),
               focusNode: _nameFocus,
             ),
             20.h,
             TextInput(
               text: 'Email',
               controller: _emailController,
-              error: _emailError,
-              removeError: () => setState(() => _emailError = null),
+              error: emailField.error,
+              removeError: () => ref.read(emailFieldNotifierProvider.notifier).updateError(null),
               focusNode: _emailFocus,
             ),
             20.h,
             TextInput(
               text: 'Password',
               controller: _passController,
-              error: _passError,
-              removeError: () => setState(() => _passError = null),
+              error: passwordField.error,
+              removeError: () => ref.read(passwordFieldNotifierProvider.notifier).updateError(null),
               focusNode: _passwordFocus,
             )
           ],
@@ -175,7 +186,10 @@ class _RegisterPageState extends State<RegisterPage> {
             text: 'Register',
             formKey: _formKey,
             onClick: () async {
-              await _registerUser();
+              final nameError = ref.read(nameFieldNotifierProvider.notifier).validate(_nameController.text);
+              final emailError = ref.read(emailFieldNotifierProvider.notifier).validate(_emailController.text);
+              final passwordError = ref.read(passwordFieldNotifierProvider.notifier).validate(_passController.text);
+              if(!nameError || !emailError || !passwordError){_registerUser();}
             },
           ),
           10.h,

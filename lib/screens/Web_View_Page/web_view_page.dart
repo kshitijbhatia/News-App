@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:news_app/utils/constants.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+final webViewPageProvider = StateProvider((ref) {
+  return WebViewPageState.initial;
+},);
+
+enum WebViewPageState { initial, loading }
 
 class WebViewPage extends StatelessWidget{
   const WebViewPage({super.key, required this.url});
@@ -42,19 +49,17 @@ class WebViewPage extends StatelessWidget{
 }
 
 
-class _WebViewComponent extends StatefulWidget{
+class _WebViewComponent extends ConsumerStatefulWidget{
   const _WebViewComponent({super.key, required this.url});
 
   final String url;
 
   @override
-  State<_WebViewComponent> createState() => _WebViewComponentState();
+  ConsumerState<_WebViewComponent> createState() => _WebViewComponentState();
 }
 
-class _WebViewComponentState extends State<_WebViewComponent> {
+class _WebViewComponentState extends ConsumerState<_WebViewComponent> {
   late final WebViewController controller;
-
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -65,14 +70,10 @@ class _WebViewComponentState extends State<_WebViewComponent> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (url){
-            setState(() {
-              _isLoading = true;
-            });
+            ref.read(webViewPageProvider.notifier).state = WebViewPageState.loading;
           },
           onPageFinished: (url) {
-            setState(() {
-              _isLoading = false;
-            });
+            ref.read(webViewPageProvider.notifier).state = WebViewPageState.initial;
           },
         )
       )
@@ -84,9 +85,17 @@ class _WebViewComponentState extends State<_WebViewComponent> {
     double width = ScreenSize.getWidth(context);
     return Container(
       width: width,
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator( color: AppTheme.highlightedTheme,),)
-          : WebViewWidget(controller: controller,)
+      child: Consumer(
+        builder: (context, ref, child) {
+          final webViewState = ref.watch(webViewPageProvider);
+          switch(webViewState){
+            case WebViewPageState.loading :
+              return const Center(child: CircularProgressIndicator( color: AppTheme.highlightedTheme,),);
+            case WebViewPageState.initial :
+              return WebViewWidget(controller: controller,);
+          }
+        },
+      )
     );
   }
 }

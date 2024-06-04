@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:math' as math;
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/controllers/article_controllers.dart';
+import 'package:news_app/main.dart';
 import 'package:news_app/models/article.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/models/user.dart';
@@ -18,59 +19,62 @@ import 'package:news_app/utils/constants.dart';
 import 'package:news_app/screens/Home_Page/article_card.dart';
 import 'package:news_app/screens/Loading_Page/loading_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomePage extends StatefulWidget {
+final showProfileSectionProvider = StateProvider<bool>((ref) {
+  return false;
+},);
+
+final showProfilePictureProvider = StateProvider<bool>((ref) {
+  return false;
+},);
+
+final countryProvider = StateProvider<String>((ref) {
+  return "";
+},);
+
+final getArticlesFutureProvider = FutureProvider.autoDispose.family<List<Article>, BuildContext>((ref, context) async {
+  try{
+    // Get the country from Remote Config
+    await FirebaseRemoteConfigService.getInstance.fetchAndActivate();
+    final country = FirebaseRemoteConfigService.getInstance.getCountry;
+    ref.read(countryProvider.notifier).state = country;
+
+    final user = ref.read(currentUserNotifierProvider);
+
+    // Set the user uid in crashlytics
+    await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
+
+    // Get Articles
+    final articleController = ref.read(articleControllerProvider);
+    final response = await articleController.getArticles(country);
+
+    // Set articles list and show Profile picture in app bar
+    ref.read(articleListNotifierProvider.notifier).setArticleList(response);
+    ref.read(showProfilePictureProvider.notifier).state = true;
+    return response;
+  }catch(error){
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ErrorPage(),));
+    rethrow;
+  }
+},);
+
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-
-  bool _isComplete = false;
-  bool _showProfile = false;
-  late AppUser user;
-  List<Article> _articles = [];
-  String country = "";
-
-  Future<void> _getArticles() async {
-    try {
-      // Get the country from Remote Config
-      await FirebaseRemoteConfigService.getInstance.fetchAndActivate();
-      country = FirebaseRemoteConfigService.getInstance.getCountry;
-
-      // Get the user from Shared Preferences
-      final prefs = await SharedPreferences.getInstance();
-      user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
-
-      // Set the user uid in crashlytics
-      await FirebaseCrashlytics.instance.setUserIdentifier(user.uid);
-
-      FirebaseAnalytics.instance.setUserId(id : user.uid);
-
-      // Get Articles
-      final response = await ArticleController.getInstance.getArticles(country);
-
-      setState(() {
-        _isComplete = true;
-        _articles = response;
-      });
-    } on CustomError catch (error) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ErrorPage(refreshPage: _refreshPage),));
-    }
-  }
+class _HomePageState extends ConsumerState<HomePage> {
 
   Future<void> _refreshPage() async {
-    setState(() {
-      _isComplete = false;
-      _articles.clear();
-    });
-    await _getArticles();
+    ref.read(articleListNotifierProvider.notifier).setArticleList([]);
+    ref.read(getArticlesFutureProvider(context));
   }
 
   Future<void> initializeNotification() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     final _user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
     await FirebaseMessagingApi.getInstance.initNotifications();
     await FirebaseMessagingApi.getInstance.subscribeToTopic(_user.uid);
@@ -80,12 +84,12 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _getArticles();
     initializeNotification();
   }
 
   @override
   void dispose() {
+    final user = ref.read(currentUserNotifierProvider);
     FirebaseMessagingApi.getInstance.unsubscribeFromTopic(user.uid);
     FirebaseMessagingApi.getInstance.unsubscribeFromTopic(Constants.allSignedInUsers);
     super.dispose();
@@ -96,18 +100,31 @@ class _HomePageState extends State<HomePage> {
     return WillPopScope(
       onWillPop: () => Future.value(false),
       child: Scaffold(
-        appBar: _appBar(),
-          body:
-          _isComplete
-              ? _articleList()
-              : const LoadingScreen()
-        ),
+          appBar: _appBar(),
+          body: Consumer(
+            builder: (context, ref, child) {
+              return ref.watch(getArticlesFutureProvider(context)).when(
+                  data: (data) {
+                    return _articleList();
+                  },
+                  error: (error, stackTrace) {
+                    return Container();
+                  },
+                  loading: () => const LoadingScreen(),
+              );
+            },
+          )
+      ),
     );
   }
 
 
 
   _appBar(){
+    final AppUser user = ref.watch(currentUserNotifierProvider);
+    final showProfilePicture = ref.watch(showProfilePictureProvider);
+    final showProfileSection = ref.watch(showProfileSectionProvider);
+
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
     return AppBar(
@@ -119,20 +136,21 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap : () => setState(() => _showProfile = !_showProfile),
-                  child:
-                  _isComplete ? CircleAvatar(
-                    maxRadius: 16,
-                    backgroundColor: Colors.white,
-                    backgroundImage: NetworkImage(user.imageUrl),
-                  ) : Container(
-                    width: width/20,
-                    height: height/38,
-                    child: const CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  ),
+                  onTap : () => ref.read(showProfileSectionProvider.notifier).state = !showProfileSection,
+                  child: showProfilePicture
+                    ? CircleAvatar(
+                        maxRadius: 16,
+                        backgroundColor: Colors.white,
+                        backgroundImage: NetworkImage(user.imageUrl),
+                      )
+                    : Container(
+                        width: width/20,
+                        height: height/38,
+                        child: const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                  )
                 ),
                 10.w,
                 Text(
@@ -152,7 +170,12 @@ class _HomePageState extends State<HomePage> {
                       child: const Icon(Icons.navigation),
                   ),
                 ),
-                Text(country, style: AppTheme.getStyle(color: Colors.white, fs: 16, fw: FontWeight.bold),)
+                Consumer(
+                    builder: (context, ref, child) {
+                      final country = ref.watch(countryProvider);
+                      return Text(country, style: AppTheme.getStyle(color: Colors.white, fs: 16, fw: FontWeight.bold),);
+                    },
+                )
               ],
             ),
           )
@@ -166,6 +189,7 @@ class _HomePageState extends State<HomePage> {
   Widget _articleList(){
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
+    final showProfileSection = ref.watch(showProfileSectionProvider);
     return Container(
       width: width,
       height: height,
@@ -175,32 +199,37 @@ class _HomePageState extends State<HomePage> {
         color: AppTheme.highlightedTheme,
         child: Stack(
           children: [
-            GestureDetector(
-              onTap: () => setState(() => _showProfile = false),
-              child: ListView.builder(
-                itemCount: _articles.length + 1,
-                itemBuilder: (context, index) {
-                  if(index == 0){
-                    return Container(
-                      width: width,
-                      height: height/16,
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 15),
-                      child: Text("Top Headlines", style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w600),),
-                    );
-                  }
-                  if (index < _articles.length) {
-                    Article currentArticle = _articles[index - 1];
-                    return ArticleCard(
-                      article: currentArticle,
-                    );
-                  }else {
-                    return Container();
-                  }
-                },
-              ),
+            Consumer(
+              builder: (context, ref, child) {
+                final articles = ref.watch(articleListNotifierProvider);
+                return GestureDetector(
+                  onTap: () => ref.read(showProfileSectionProvider.notifier).state = false,
+                  child: ListView.builder(
+                    itemCount: articles.length + 1,
+                    itemBuilder: (context, index) {
+                      if(index == 0){
+                        return Container(
+                          width: width,
+                          height: height/16,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.only(left: 15),
+                          child: Text("Top Headlines", style: AppTheme.getStyle(color: Colors.black, fs: 18, fw: FontWeight.w600),),
+                        );
+                      }
+                      if (index < articles.length) {
+                        Article currentArticle = articles[index - 1];
+                        return ArticleCard(
+                          article: currentArticle,
+                        );
+                      }else {
+                        return Container();
+                      }
+                    },
+                  ),
+                );
+              },
             ),
-            _showProfile
+            showProfileSection
                 ? _profileSection()
                 : 0.h,
         ],
@@ -212,6 +241,7 @@ class _HomePageState extends State<HomePage> {
   Widget _profileSection(){
     double width = ScreenSize.getWidth(context);
     double height = ScreenSize.getHeight(context);
+    final AppUser user = ref.watch(currentUserNotifierProvider);
     return Container(
       width: width/1.5,
       height: height,
@@ -270,14 +300,9 @@ class _HomePageState extends State<HomePage> {
 
                 GestureDetector(
                   onTap: (){
-                    setState(() => _showProfile = false);
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => UpdatePage(user: user,),)
-                    ).then((value){
-                      if(value != null){
-                        _refreshPage();
-                      }
+                    ref.read(showProfileSectionProvider.notifier).state = false;
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const UpdatePage(),)).then((value){
+                      if(value != null){_refreshPage();}
                     });
                   },
                   child: Container(
