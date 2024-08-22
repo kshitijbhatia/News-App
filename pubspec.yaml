@@ -78,6 +78,8 @@ flutter:
   assets:
      - assets/breaking_news.jpg
      - assets/user.webp
+     - assets/ic_notification.png
+     - assets/ic_warning.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

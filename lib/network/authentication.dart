@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -33,6 +35,7 @@ class Authentication{
       await users.doc(_firebaseAuth.currentUser!.uid).set(data);
 
       final fCMToken = await FirebaseMessaging.instance.getToken();
+      log("FCM Token: $fCMToken");
       await activeUsers.doc(fCMToken).set({'uid' : _firebaseAuth.currentUser!.uid.toString()});
 
       return {

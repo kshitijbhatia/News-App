@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="0dp"
+    android:paddingLeft="0dp"
+    android:paddingRight="8dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingTop="0dp"
+        android:layout_marginTop="0dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/notification_title"
+            style="@style/TextAppearance.Compat.Notification.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:paddingLeft="0dp"
+            android:layout_marginBottom="2dp"
+            android:text="Large notification, showing a title and a body." />
+
+        <TextView
+            android:id="@+id/notification_body"
+            style="@style/TextAppearance.Compat.Notification.Line2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:paddingLeft="0dp"
+            android:text="This is the body. The height is adjusted to wrap content." />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/notification_image"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginLeft="6dp"
+        android:layout_marginTop="10dp"
+        android:src="@drawable/ic_warning" />
+</LinearLayout>
