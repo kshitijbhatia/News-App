@@ -1,31 +1,13 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'dart:ui' as ui;
-
-import 'package:flutter/services.dart';
-
-class NotificationIconCustomizer {
-  static const MethodChannel _channel = MethodChannel('com.example.news_app');
-
-  static Future<void> showCustomNotification(RemoteMessage message) async {
-    try {
-      await _channel.invokeMethod('showCustomNotification',
-        {
-          "title" : message.data["title"],
-          "body" : message.data["body"],
-          "channel_id" : message.data["type"]
-        },
-      );
-    } on PlatformException catch (e) {
-      log("Failed to show notification: '${e.message}'.");
-    }
-  }
-}
+import 'package:news_app/main.dart';
+import 'package:news_app/models/user.dart';
+import 'package:news_app/screens/Update_Page/update_page.dart';
 
 
 @pragma('vm:entry-point')
@@ -39,41 +21,22 @@ Future<void> handleBackgroundMessage(RemoteMessage message) async {
 
   if(message.data["data"] == "1"){
 
-    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    const AndroidInitializationSettings androidInitializationSettings = AndroidInitializationSettings('@drawable/ic_stat_warning');
-    const InitializationSettings initializationSettings = InitializationSettings(android: androidInitializationSettings,);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-    late AndroidNotificationDetails androidNotificationDetails;
-    if(message.data["type"] == "battery_alert"){
-      androidNotificationDetails = AndroidNotificationDetails(
-        FirebaseMessagingApi.batteryAlertChannel.id,
-        FirebaseMessagingApi.batteryAlertChannel.name,
-        icon: "@drawable/ic_stat_battery",
-        color: Colors.red,
-        importance: Importance.high,
-        sound: const RawResourceAndroidNotificationSound('battery_sound'),
-        priority: Priority.high,
-        colorized: true
-      );
-    }else{
-      androidNotificationDetails = AndroidNotificationDetails(
-        FirebaseMessagingApi.breakingNewsChannel.id,
-        FirebaseMessagingApi.breakingNewsChannel.name,
-        icon: "@drawable/ic_stat_warning",
+    final AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
+        FirebaseMessagingApi.theftAlertNotificationChannel.id,
+        FirebaseMessagingApi.theftAlertNotificationChannel.name,
+        icon: "@drawable/tvs_notification_toolbar",
         color: Colors.yellowAccent,
-        importance: Importance.high,
+        importance: Importance.max,
         sound: const RawResourceAndroidNotificationSound('custom_sound'),
-        priority: Priority.high,
-        colorized: true
-      );
-    }
+        priority: Priority.max,
+        colorized: true,
+    );
 
     NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidNotificationDetails,
     );
 
-    await flutterLocalNotificationsPlugin.show(
+    await FirebaseMessagingApi._flutterLocalNotificationsPlugin.show(
       message.notification.hashCode,
       message.data["title"],
       message.data["body"],
@@ -85,126 +48,160 @@ Future<void> handleBackgroundMessage(RemoteMessage message) async {
   }
 }
 
+@pragma('vm:entry-point')
+void handleBackgroundNotificationTap(NotificationResponse message) {
+  log("Background_Message_Payload : ${message.payload}");
+}
+
+
+
 
 
 class FirebaseMessagingApi{
-
   FirebaseMessagingApi._();
   static final FirebaseMessagingApi _instance = FirebaseMessagingApi._();
   static FirebaseMessagingApi get getInstance => _instance;
 
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  static final  FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  static const AndroidNotificationChannel breakingNewsChannel = AndroidNotificationChannel(
-    'breaking_news',
-    'Breaking News Alerts',
-    importance: Importance.high,
-    sound: RawResourceAndroidNotificationSound('custom_sound'),
+  static const AndroidNotificationChannel theftAlertNotificationChannel = AndroidNotificationChannel(
+      'theft_alert',
+      'Theft Alerts',
+      importance: Importance.max,
+      sound: RawResourceAndroidNotificationSound('alarm_sound'),
+      enableLights: true,
+      ledColor: Colors.white
   );
-
-  static const AndroidNotificationChannel batteryAlertChannel = AndroidNotificationChannel(
-    'battery_alert',
-    "Battery Alert",
-    importance: Importance.high,
-    sound: RawResourceAndroidNotificationSound('battery_sound'),
-  );
-
-  Future<void> initPushNotification() async {
-    final settings = await _firebaseMessaging.requestPermission();
-    log("Notification Auth Status: ${settings.authorizationStatus}");
-    final String? fcmToken = await _firebaseMessaging.getToken();
-    log("FCM Token: $fcmToken");
-    refreshToken(fcmToken!);
-
-    const androidInitialization = AndroidInitializationSettings("@drawable/ic_stat_warning");
-    const iOSInitialisation = DarwinInitializationSettings();
-    const initializationSettings = InitializationSettings(android: androidInitialization, iOS: iOSInitialisation);
-    _flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
-
-  checkFCMToken(){
-    _firebaseMessaging.onTokenRefresh.listen((String newToken){
-      log("New Token: $newToken");
-      refreshToken(newToken);
-    });
-  }
 
   Future<void> initNotifications() async {
-    await initPushNotification();
-    checkFCMToken();
+    try{
+      final settings = await _firebaseMessaging.requestPermission();
+      log("Notification_Auth_Status: ${settings.authorizationStatus}");
 
-    _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(breakingNewsChannel);
-    _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(batteryAlertChannel);
+      getFCMToken();
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      log("Message Data: ${message.data}");
+      checkFCMToken();
 
-      await NotificationIconCustomizer.showCustomNotification(message);
-
-      BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
-          message.data["body"].toString(),
-          htmlFormatBigText: true,
-          contentTitle: message.data["title"].toString(),
-          htmlFormatContentTitle: true,
+      const androidInitialization = AndroidInitializationSettings("@drawable/tvs_notification_toolbar");
+      const iOSInitialisation = DarwinInitializationSettings();
+      const initializationSettings = InitializationSettings(android: androidInitialization, iOS: iOSInitialisation);
+      await _flutterLocalNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (details) {
+          log('User tapped on notification. Inside onDidReceiveNotificationResponse');
+          log("Payload : ${details.payload}");
+        },
+        onDidReceiveBackgroundNotificationResponse: handleBackgroundNotificationTap,
       );
+      _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(theftAlertNotificationChannel);
 
-      late AndroidNotificationDetails androidNotificationDetails;
-      if(message.data["type"] == 'battery_alert'){
-        androidNotificationDetails = AndroidNotificationDetails(
-          batteryAlertChannel.id,
-          batteryAlertChannel.name,
-          icon: "@drawable/ic_stat_battery",
-          importance: Importance.high,
-          styleInformation: bigTextStyleInformation,
-          priority: Priority.high,
-          playSound: true,
-          color: Colors.red,
-          colorized: true,
-          largeIcon: const DrawableResourceAndroidBitmap('@drawable/ic_warning')
-        );
-      }else{
-        androidNotificationDetails = AndroidNotificationDetails(
-          breakingNewsChannel.id,
-          breakingNewsChannel.name,
-          icon: "@drawable/ic_stat_warning",
-          importance: Importance.high,
-          styleInformation: bigTextStyleInformation,
-          priority: Priority.high,
-          playSound: true,
-          color: Colors.yellowAccent,
-          colorized: true,
-          largeIcon: const DrawableResourceAndroidBitmap('@drawable/ic_warning')
-        );
-      }
+      _showForegroundNotification();
+    }catch(error){
+      log("Error occurred when initialising notification plugin: $error");
+    }
+  }
+
+
+
+  void _showForegroundNotification() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+
+      // BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
+      //   message.data["body"].toString(),
+      //   htmlFormatBigText: false,
+      //   contentTitle: message.data["title"].toString(),
+      //   htmlFormatContentTitle: false,
+      //   htmlFormatContent: false,
+      // );
+
+      // ToDo: TVS Blue Color, add vibration Patterns, add enableLights
+      final AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
+          theftAlertNotificationChannel.id,
+          theftAlertNotificationChannel.name,
+          icon: "@drawable/tvs_notification_toolbar",
+          // styleInformation: bigTextStyleInformation,
+          importance: Importance.max,
+          priority: Priority.max,
+          // Not Working
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
+          ledColor: Colors.white,
+          ledOnMs: 1000,
+          ledOffMs: 1000,
+          
+          color: Colors.lightBlue,
+      );
 
       NotificationDetails platformChannelSpecifics = NotificationDetails(
           android: androidNotificationDetails,
           iOS: const DarwinNotificationDetails()
       );
 
-      // await _flutterLocalNotificationsPlugin.show(
-      //   message.notification.hashCode,
-      //   message.data["title"].toString(),
-      //   message.data["body"].toString(),
-      //   platformChannelSpecifics,
-      //   payload: "123456"
-      // );
-
+      await _flutterLocalNotificationsPlugin.show(
+        message.notification.hashCode,
+        message.data["title"].toString(),
+        message.data["body"].toString(),
+        platformChannelSpecifics,
+        payload: "123456"
+      );
     });
   }
 
-  Future<void> subscribeToTopic(String topic) async {
-    await _firebaseMessaging.subscribeToTopic(topic);
-    log('Subscribed To Topic : $topic');
+
+
+  Future<String?> getFCMToken() async {
+    String? fcmToken;
+    try{
+      fcmToken = await FirebaseMessaging.instance.getToken() ?? 'null';
+    }catch(error){
+      fcmToken = 'error';
+      log("Error occurred when fetching the FCM Token; $error");
+    }
+    log("FCM_Token: $fcmToken");
+    return fcmToken;
   }
 
-  Future<void> unsubscribeFromTopic(String topic) async {
-    await _firebaseMessaging.unsubscribeFromTopic(topic);
-    log('Unsubscribed From Topic : $topic');
+  void removeToken() async {
+    await FirebaseMessaging.instance.deleteToken();
   }
+
+  void checkFCMToken(){
+    _firebaseMessaging.onTokenRefresh
+        .listen((String newToken){
+          log("New_Token: $newToken");
+        })
+        .onError((error){
+          log('Error: $error');
+        });
+  }
+
+
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void refreshToken(String token) async {
   final CollectionReference fcmTokens = FirebaseFirestore.instance.collection('fcm');
@@ -223,3 +220,4 @@ void refreshToken(String token) async {
     });
   }
 }
+

@@ -69,25 +69,14 @@ class _HomePageState extends State<HomePage> {
     await _getArticles();
   }
 
-  Future<void> initializeNotification() async {
-    final prefs = await SharedPreferences.getInstance();
-    final _user = AppUser.fromJson(jsonDecode(prefs.getString(Constants.userKey)!));
-    await FirebaseMessagingApi.getInstance.initNotifications();
-    await FirebaseMessagingApi.getInstance.subscribeToTopic(_user.uid);
-    await FirebaseMessagingApi.getInstance.subscribeToTopic(Constants.allSignedInUsers);
-  }
-
   @override
   void initState() {
     super.initState();
     _getArticles();
-    initializeNotification();
   }
 
   @override
   void dispose() {
-    FirebaseMessagingApi.getInstance.unsubscribeFromTopic(user.uid);
-    FirebaseMessagingApi.getInstance.unsubscribeFromTopic(Constants.allSignedInUsers);
     super.dispose();
   }
 

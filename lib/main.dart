@@ -13,6 +13,8 @@ import 'package:news_app/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -21,7 +23,6 @@ void main() async {
   );
 
   await FirebaseMessagingApi.getInstance.initNotifications();
-  await FirebaseMessagingApi.getInstance.subscribeToTopic(Constants.allUsers);
   FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
 
   await FirebaseRemoteConfigService.getInstance.initialize();
@@ -65,6 +66,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'News App',
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       home: (_user != "")
           ? const HomePage()
