@@ -1,5 +1,7 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
+import 'package:news_app/logger.dart';
+import 'package:news_app/main.dart';
 import 'package:news_app/models/custom_error.dart';
 import 'package:news_app/network/api_interceptors.dart';
 import 'package:news_app/utils/constants.dart';
@@ -24,7 +26,8 @@ class ApiService{
   Future<Map<String, dynamic>> getArticles(String country) async {
     try{
       String method = 'GET';
-
+      // await LoggerClass.saveLog("ApiService.getArticles_START");
+      // NativeCommunication.callNativeMethod("api_call");
       Map<String, dynamic> queryParams = {
         'apiKey' : Constants.apiKey,
         'country' : country,
@@ -38,10 +41,12 @@ class ApiService{
       );
 
       final Map<String, dynamic> resJson = response.data!;
+      LoggerClass.saveLog("ApiService.getArticles_SUCCESS");
       return resJson;
 
-    }catch(error){
+    }catch(error, stackTrace){
       CustomError customError = _handleError(error);
+      // LoggerClass.saveLog("ApiService.getArticles_FAILURE \n\t\t\tError - ${error.toString()} \n\t\t\tStack_Trace: ${stackTrace.toString()}");
       log('API_Service : ${customError.toString()}');
       throw(customError);
     }
